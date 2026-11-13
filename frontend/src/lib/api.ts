@@ -1,0 +1,98 @@
+import type {
+  Assessment,
+  Astronaut,
+  ImportReport,
+  Measurement,
+  MeasurementInput,
+  Meta,
+  Point,
+  Site,
+} from "./types";
+
+const BASE = "/api/v1";
+
+export class ApiError extends Error {
+  status: number;
+  code?: string;
+
+  constructor(message: string, status: number, code?: string) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+  }
+}
+
+function withLang(path: string, lang?: string): string {
+  if (!lang) return path;
+  const separator = path.includes("?") ? "&" : "?";
+  return `${path}${separator}lang=${encodeURIComponent(lang)}`;
+}
+
+async function request<T>(
+  path: string,
+  options: RequestInit = {},
+  lang?: string,
+): Promise<T> {
+  const response = await fetch(withLang(path, lang), {
+    ...options,
+    headers: {
+      Accept: "application/json",
+      ...(options.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
+      ...options.headers,
+    },
+  });
+
+  if (!response.ok) {
+    let detail = response.statusText;
+    let code: string | undefined;
+    try {
+      const body = (await response.json()) as { detail?: string; code?: string };
+      detail = body.detail ?? detail;
+      code = body.code;
+    } catch {
+      // respuesta sin JSON: se conserva el statusText
+    }
+    throw new ApiError(detail, response.status, code);
+  }
+
+  if (response.status === 204) return undefined as T;
+  return (await response.json()) as T;
+}
+
+export const api = {
+  meta: (lang: string) => request<Meta>(`${BASE}/meta`, {}, lang),
+
+  astronauts: (lang: string) => request<Astronaut[]>(`${BASE}/astronauts`, {}, lang),
+
+  monitoring: (code: string, site: Site, lang: string) =>
+    request<Assessment>(
+      `${BASE}/astronauts/${encodeURIComponent(code)}/monitoring?site=${site}`,
+      {},
+      lang,
+    ),
+
+  preview: (code: string, input: MeasurementInput, lang: string) =>
+    request<Point>(
+      `${BASE}/astronauts/${encodeURIComponent(code)}/preview`,
+      { method: "POST", body: JSON.stringify(input) },
+      lang,
+    ),
+
+  createMeasurement: (code: string, input: MeasurementInput, lang: string) =>
+    request<Measurement>(
+      `${BASE}/astronauts/${encodeURIComponent(code)}/measurements`,
+      { method: "POST", body: JSON.stringify(input) },
+      lang,
+    ),
+
+  importFile: (code: string, file: File, lang: string) => {
+    const form = new FormData();
+    form.append("file", file);
+    return request<ImportReport>(
+      `${BASE}/astronauts/${encodeURIComponent(code)}/measurements/import`,
+      { method: "POST", body: form },
+      lang,
+    );
+  },
+};

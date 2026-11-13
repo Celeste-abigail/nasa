@@ -1,0 +1,22 @@
+{
+  "error.not_found": "No se encontro el astronauta {code}.",
+  "error.astronaut_exists": "El astronauta {code} ya existe.",
+  "error.bua_range": "BUA debe ser mayor que {min} y menor que {max} dB/MHz/cm.",
+  "error.uv_range": "UV debe estar entre {min} y {max} m/s.",
+  "error.att_range": "ATT debe ser mayor que {min} y menor que {max} dB/cm.",
+  "error.date_before_baseline": "La fecha de la sesion debe ser posterior a la linea base ({baseline}).",
+  "error.invalid_site": "Sitio de medicion desconocido: {site}.",
+  "error.import_empty": "El archivo no tiene filas de datos.",
+  "error.import_format": "Formato no soportado. Usa .csv, .xlsx o .json.",
+  "error.import_row": "Fila {line}: {message}",
+  "error.missing_column": "Falta la columna obligatoria: {column}.",
+  "warning.bv_tv_out_of_range": "El BV/TV predicho ({value}) queda fuera del rango fisico en {date}.",
+  "level.1.name": "Normal",
+  "level.1.tip": "Mantener el protocolo de ejercicio actual.",
+  "level.2.name": "Riesgo",
+  "level.2.tip": "Perdida mas rapida que el promedio del calcaneo: aumentar la carga de ejercicio.",
+  "level.3.name": "Alerta",
+  "level.3.tip": "La perdida alcanzo el nivel de cadera y columna: revision clinica.",
+  "site.calcaneus": "Calcaneo (talon)",
+  "site.femoral_neck": "Cuello femoral"
+}

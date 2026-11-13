@@ -1,1 +1,186 @@
-﻿# nasa
+﻿# NASA SPACE · Monitoreo óseo SCAN
+
+Sistema local de seguimiento de densidad ósea para misiones espaciales de larga duración.
+Implementa el método **SCAN** (Scanning Confocal Acoustic Navigation): captura **BUA**, **UV** y
+**ATT**, estima **BV/TV** con la regresión publicada, calcula la tendencia de pérdida frente a la
+línea base y clasifica el riesgo en tres niveles.
+
+El proyecto está diseñado como plataforma de salud del astronauta: el módulo óseo es el primero y
+el núcleo (`backend/app/domain`) está preparado para sumar cortisol y otros factores sin reescribir
+la aplicación.
+
+```
+plan -> medir -> evaluar -> alertar -> registrar
+```
+
+## Stack
+
+| Capa | Tecnología | Motivo |
+| --- | --- | --- |
+| Toolchain | **mise** (node 24, python 3.13, uv, bun) | una sola versión reproducible, sin admin |
+| Backend | **FastAPI + SQLModel + SQLite** | validación, OpenAPI y archivo `.db` local |
+| Ciencia | **Python puro** (numpy no requerido) | dominio testeable y determinista |
+| Frontend | **React 19 + TypeScript + Vite** | componentes por función, tipado estricto |
+| Datos remotos | **TanStack Query** | cache, invalidación y estados de carga |
+| i18n | **react-i18next** + catálogos del backend | solo `es` y `en` |
+| Runtime dev | **bun** | instalación rápida y `bun run dev` |
+
+Sin nube, sin dominio, sin contenedores obligatorios: todo corre en la máquina.
+
+## Inicio rápido
+
+Requisitos: Windows 10/11 (probado), `mise` y `bun`.
+
+```powershell
+winget install --id jdx.mise -e
+# nueva terminal para que mise entre al PATH
+bun run setup          # mise install + uv sync + bun install
+bun run dev            # API + web con recarga en vivo
+```
+
+- Web: <http://127.0.0.1:5173>
+- API/Swagger: <http://127.0.0.1:8000/docs>
+- Health: <http://127.0.0.1:8000/api/health>
+
+Datos de ejemplo (opcional):
+
+```powershell
+mise run seed          # o: backend\.venv\Scripts\python.exe -m app.scripts.seed
+```
+
+## Arquitectura
+
+Screaming architecture: las carpetas nombran el **qué** (mediciones, monitoreo, astronautas), no el
+**cómo**. Cuatro capas con dependencias en un solo sentido:
+
+```
+api (HTTP) → modules (casos de uso) → domain (reglas) ← infrastructure (SQLite, archivos)
+```
+
+```
+backend/
+  app/
+    core/            config, bus de eventos, i18n, dependencias compartidas
+    domain/          modelos SQLModel, esquemas Pydantic, núcleo cientifico (bone.py)
+    infrastructure/  engine SQLite, repositorios, lectura de archivos
+    modules/
+      astronauts/    alta y consulta de astronautas
+      measurements/  registro, validación de entrada e importación CSV/XLSX/JSON
+      monitoring/    evaluación de la serie, tendencia y triage
+    api/v1/          routers FastAPI (contratos HTTP)
+    i18n/            catálogos es.json / en.json (mensajes del backend)
+    scripts/         seed de datos de ejemplo
+  tests/             pytest: dominio puro + flujo HTTP completo
+frontend/
+  src/
+    lib/             cliente API tipado, tipos compartidos, formato de números/fechas
+    i18n/            catálogos es/en y configuración de react-i18next
+    modules/
+      shell/         header, selector de idioma, toast
+      astronauts/    contexto de astronauta (en header)
+      measurements/  asistente de 3 pasos e importación
+      monitoring/    KPIs, gráfico SVG y tabla de historial
+```
+
+### Event-driven
+
+`app/core/events.py` es un bus in-process con tópicos:
+
+| Tópico | Se publica cuando | Suscriptor actual |
+| --- | --- | --- |
+| `measurement.created` | se registra una medición | invalida la cache de evaluaciones |
+| `measurement.imported` | termina una importación | invalida la cache de evaluaciones |
+| `astronaut.created` | se crea un astronauta | invalida la cache de evaluaciones |
+
+No hay broker porque la app corre en una máquina; el bus desacopla efectos secundarios y deja el
+punto de extensión listo para métricas o auditoría.
+
+### Base de datos
+
+- Archivo: `backend/data/nasa_space.db` (ignorado por git).
+- La crea **uvicorn** al arrancar (lifespan de FastAPI), no un proceso aparte.
+- Se puede cambiar con `NASA_DATABASE_URL`; cualquier URL SQLAlchemy sirve (Postgres incluido).
+- Reset: borrar el archivo y reiniciar.
+
+## Reglas clínicas implementadas
+
+| Concepto | Regla |
+| --- | --- |
+| BV/TV predicho | `3.89e-4 · UV − 9e-4 · BUA − 0.456` |
+| Línea base | primera medición de cada astronauta **por sitio** |
+| Pérdida acumulada | `(BUA_base − BUA_actual) / BUA_base · 100` |
+| Tasa | pérdida acumulada / meses desde la línea base (≥ 0.1 mes) |
+| Nivel 1 Normal | tasa < 0.8 %/mes |
+| Nivel 2 Riesgo | 0.8 ≤ tasa ≤ 1.5 %/mes |
+| Nivel 3 Alerta | tasa > 1.5 %/mes **o** pérdida acumulada > 3 % |
+
+Validación de dominio (se rechaza, no se extrapola): `0 < BUA < 200 dB/MHz/cm`,
+`1200 ≤ UV ≤ 2000 m/s`, `0 < ATT < 200 dB/cm`. La fecha de sesión debe ser posterior a la línea
+base. ATT se almacena y se muestra, pero no puntúa: el modelo publicado no lo incluye.
+
+Referencias: [10.1117/12.810048](https://doi.org/10.1117/12.810048),
+[10.1016/j.actaastro.2012.08.032](https://doi.org/10.1016/j.actaastro.2012.08.032),
+[10.1121/1.4784949](https://doi.org/10.1121/1.4784949).
+
+## API
+
+| Método | Ruta | Descripción |
+| --- | --- | --- |
+| GET | `/api/health` | estado del proceso y URL de la base |
+| GET | `/api/v1/health` | alias dentro del prefijo versionado |
+| GET | `/api/v1/meta` | modelo, umbrales, unidades, sitios e idiomas |
+| GET | `/api/v1/astronauts` | lista de astronautas |
+| POST | `/api/v1/astronauts` | alta (`{"code","name"}`) |
+| GET | `/api/v1/astronauts/{code}` | detalle |
+| GET | `/api/v1/astronauts/{code}/measurements?site=` | mediciones |
+| POST | `/api/v1/astronauts/{code}/measurements` | alta de medición |
+| POST | `/api/v1/astronauts/{code}/preview` | evalúa sin guardar (paso 3 del asistente) |
+| POST | `/api/v1/astronauts/{code}/measurements/import` | importa archivo |
+| GET | `/api/v1/astronauts/{code}/monitoring?site=&window=&lang=` | serie evaluada + nivel actual |
+
+Todas las respuestas de error usan `{"detail": "...", "code": "..."}` en el idioma solicitado.
+
+### i18n
+
+- Idiomas: **es** y **en**.
+- El frontend traduce su interfaz (`frontend/src/i18n`).
+- El backend traduce errores y el texto clínico de cada nivel (`backend/app/i18n`), resolviendo
+  `?lang=` → `Accept-Language` → `es`.
+- La preferencia del navegador queda en `localStorage` (`nasa-space-lang`).
+
+## Importación de datos
+
+Formatos: **CSV**, **XLSX** y **JSON**. El formato se detecta por extensión.
+
+```csv
+date,bua,uv,att,site
+2026-07-01,78.0,1560,52,calcaneus
+2026-07-31,77.5,1556,51.6,calcaneus
+```
+
+- Columnas obligatorias: `date` (o `fecha`) y `bua`, `uv`. Opcionales: `att`, `site`.
+- Fechas aceptadas: `YYYY-MM-DD`, `DD/MM/YYYY`, `YYYY/MM/DD`, `DD-MM-YYYY`, `MM/DD/YYYY`.
+- Sitios: `calcaneus` / `calcáneo` / `talón` y `femoral_neck` / `cuello femoral`.
+- El archivo se ordena por fecha antes de escribir y se valida fila a fila: la respuesta reporta
+  `created`, `skipped` y los errores con número de línea. Un archivo con filas malas no pierde las
+  buenas.
+
+Ejemplos listos en `examples/`.
+
+## Escalabilidad a nuevos factores
+
+El módulo óseo no está cableado a la API:
+
+1. Nuevo factor → carpeta `app/modules/<factor>/` con su `service.py` y `router.py`.
+2. Sus fórmulas puras → `app/domain/<factor>.py` con tests propios.
+3. La tabla `measurement` guarda `site` y parámetros óseos; los factores nuevos usan su propia
+   tabla (`cortisol_sample`) o la columna `source`/atributos extendidos, sin tocar lo existente.
+4. El `triage` por niveles se reutiliza: recibe números y umbrales, no tipos de medición.
+
+## Estado
+
+- 27 tests de backend (dominio + API) y 4 de frontend en verde.
+- Ruff limpio, TypeScript estricto y build de producción verificado.
+- Base local creada por uvicorn y hot reload comprobado en `bun run dev`.
+
+Ver [DEV.md](DEV.md) para el flujo de trabajo diario.
