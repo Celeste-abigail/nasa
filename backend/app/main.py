@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from datetime import date
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -33,15 +34,28 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     init_db()
     logger.info("database ready: %s", settings.database_url)
 
-    # Astronautas por defecto del prototipo (idempotente).
+    # Astronautas por defecto del prototipo (idempotente, completa el perfil).
     with Session(get_engine()) as session:
-        astronauts_service.ensure(session, "AST-01", "Astronaut One")
-        astronauts_service.ensure(session, "AST-02", "Astronaut Two")
+        astronauts_service.ensure(
+            session,
+            "AST-01",
+            "Astronaut One",
+            sex="male",
+            birth_date=date(1985, 4, 12),
+        )
+        astronauts_service.ensure(
+            session,
+            "AST-02",
+            "Astronaut Two",
+            sex="female",
+            birth_date=date(1990, 9, 23),
+        )
 
     # Event-driven: la cache de evaluaciones se invalida al escribir.
     events.bus.subscribe("measurement.created", monitoring_service.invalidate_cache)
     events.bus.subscribe("measurement.imported", monitoring_service.invalidate_cache)
     events.bus.subscribe("astronaut.created", monitoring_service.invalidate_cache)
+    events.bus.subscribe("astronaut.updated", monitoring_service.invalidate_cache)
 
     yield
 

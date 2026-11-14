@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { api } from "./lib/api";
 import type { Site } from "./lib/types";
 import { ImportPanel } from "./modules/measurements/ImportPanel";
+import { ProfilePanel } from "./modules/measurements/ProfilePanel";
 import { RegisterPanel } from "./modules/measurements/RegisterPanel";
 import { HistoryTable } from "./modules/monitoring/HistoryTable";
 import { StatusPanel } from "./modules/monitoring/StatusPanel";
@@ -48,6 +49,7 @@ export default function App() {
 
   const meta = metaQuery.data;
   const assessment = assessmentQuery.data;
+  const profile = astronauts.find((item) => item.code === active) ?? null;
   const loadError = metaQuery.isError || astronautsQuery.isError || assessmentQuery.isError;
 
   async function refresh() {
@@ -106,6 +108,18 @@ export default function App() {
                 onToast={show}
               />
             )}
+            {profile && (
+              <ProfilePanel
+                key={`profile-${profile.code}`}
+                astronaut={profile}
+                lang={lang}
+                onToast={show}
+                onSaved={() => {
+                  void queryClient.invalidateQueries({ queryKey: ["astronauts"] });
+                  void refresh();
+                }}
+              />
+            )}
           </div>
 
           <section className="panel main" aria-labelledby="monitoring-title">
@@ -113,6 +127,7 @@ export default function App() {
               <h2 id="monitoring-title">{t("monitoring.title")}</h2>
               <StatusPanel
                 current={assessment?.current ?? null}
+                reference={assessment?.reference ?? null}
                 warnings={assessment?.warnings ?? []}
                 lang={lang}
               />

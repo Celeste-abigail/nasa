@@ -39,6 +39,13 @@ export function daysBetween(startISO: string, endISO: string): number {
   );
 }
 
+/** Numero con signo explícito para Z/T-scores. */
+export function signed(value: number | null | undefined, lang: string, digits = 2): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  const text = fmt(value, lang, digits);
+  return value > 0 ? `+${text}` : text;
+}
+
 export function todayISO(): string {
   return toISODate(new Date());
 }

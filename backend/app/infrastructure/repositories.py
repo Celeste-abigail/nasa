@@ -17,8 +17,14 @@ def get_astronaut(session: Session, code: str) -> Astronaut | None:
     return session.exec(select(Astronaut).where(Astronaut.code == code)).first()
 
 
-def create_astronaut(session: Session, code: str, name: str) -> Astronaut:
-    astronaut = Astronaut(code=code, name=name)
+def create_astronaut(
+    session: Session,
+    code: str,
+    name: str,
+    sex: str | None = None,
+    birth_date: date | None = None,
+) -> Astronaut:
+    astronaut = Astronaut(code=code, name=name, sex=sex, birth_date=birth_date)
     session.add(astronaut)
     session.commit()
     session.refresh(astronaut)

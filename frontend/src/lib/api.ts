@@ -1,6 +1,7 @@
 import type {
   Assessment,
   Astronaut,
+  AstronautPatch,
   ImportReport,
   Measurement,
   MeasurementInput,
@@ -64,6 +65,13 @@ export const api = {
   meta: (lang: string) => request<Meta>(`${BASE}/meta`, {}, lang),
 
   astronauts: (lang: string) => request<Astronaut[]>(`${BASE}/astronauts`, {}, lang),
+
+  updateAstronaut: (code: string, patch: AstronautPatch, lang: string) =>
+    request<Astronaut>(
+      `${BASE}/astronauts/${encodeURIComponent(code)}`,
+      { method: "PATCH", body: JSON.stringify(patch) },
+      lang,
+    ),
 
   monitoring: (code: string, site: Site, lang: string) =>
     request<Assessment>(

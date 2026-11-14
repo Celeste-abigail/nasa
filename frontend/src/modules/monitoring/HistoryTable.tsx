@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 
-import { fmt } from "../../lib/format";
+import { fmt, signed } from "../../lib/format";
 import type { Point } from "../../lib/types";
 
 interface Props {
@@ -28,6 +28,8 @@ export function HistoryTable({ points, lang }: Props) {
             <th>{t("table.uv")}</th>
             <th>{t("table.att")}</th>
             <th>{t("table.bvtv")}</th>
+            <th>{t("table.zbua")}</th>
+            <th>{t("table.zsos")}</th>
             <th>{t("table.cumulative")}</th>
             <th>{t("table.rate")}</th>
             <th>{t("table.level")}</th>
@@ -42,6 +44,8 @@ export function HistoryTable({ points, lang }: Props) {
               <td>{fmt(point.uv, lang, 0)}</td>
               <td>{point.att === null ? "—" : fmt(point.att, lang, 2)}</td>
               <td>{fmt(point.bv_tv, lang, 3)}</td>
+              <td>{signed(point.bua_z, lang, 2)}</td>
+              <td>{signed(point.sos_z, lang, 2)}</td>
               <td>{fmt(point.cumulative_loss_pct, lang, 1)} %</td>
               <td>
                 {point.rate_pct_month === null ? "—" : fmt(point.rate_pct_month, lang, 2)}

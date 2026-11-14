@@ -1,15 +1,16 @@
 import { useTranslation } from "react-i18next";
 
 import { fmt } from "../../lib/format";
-import type { Point } from "../../lib/types";
+import type { Point, Reference } from "../../lib/types";
 
 interface Props {
   current: Point | null;
+  reference: Reference | null;
   warnings: string[];
   lang: string;
 }
 
-export function StatusPanel({ current, warnings, lang }: Props) {
+export function StatusPanel({ current, reference, warnings, lang }: Props) {
   const { t } = useTranslation();
 
   if (!current) {
@@ -57,6 +58,64 @@ export function StatusPanel({ current, warnings, lang }: Props) {
           <span>{t("monitoring.kpi.days")}</span>
         </div>
       </div>
+
+      {reference && (
+        <div className="reference">
+          <div className="reference-head">
+            <span className={`badge bone-${reference.status}`}>
+              {t(`bone.${reference.status}`)}
+            </span>
+            <span className="hint">
+              {t("reference.group", {
+                band: reference.age_band,
+                age: reference.age,
+                n: reference.n,
+              })}
+            </span>
+          </div>
+
+          <div className="reference-grid">
+            <div>
+              <strong>BUA</strong>
+              <span>
+                {t("reference.mean_sd", {
+                  mean: fmt(reference.bua.mean, lang, 1),
+                  sd: fmt(reference.bua.sd, lang, 1),
+                })}
+              </span>
+              <span>
+                {t("reference.score", {
+                  z: fmt(reference.bua.z, lang, 2),
+                  t: fmt(reference.bua.t, lang, 2),
+                })}
+              </span>
+            </div>
+            <div>
+              <strong>SOS</strong>
+              <span>
+                {t("reference.mean_sd", {
+                  mean: fmt(reference.sos.mean, lang, 1),
+                  sd: fmt(reference.sos.sd, lang, 1),
+                })}
+              </span>
+              <span>
+                {t("reference.score", {
+                  z: fmt(reference.sos.z, lang, 2),
+                  t: fmt(reference.sos.t, lang, 2),
+                })}
+              </span>
+            </div>
+          </div>
+
+          {reference.clamped && <p className="hint">{t("reference.clamped")}</p>}
+          <p className="hint">
+            {t("reference.source", {
+              source: reference.source,
+              population: reference.population,
+            })}
+          </p>
+        </div>
+      )}
     </>
   );
 }

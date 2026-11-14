@@ -16,7 +16,7 @@ esquema híbrido:
 
 | Sigla | Nombre | Unidad | Rol |
 | --- | --- | --- | --- |
-| BUA | Atenuación de ultrasonido de banda ancha | dB/MHz/cm | indicador principal; refleja porosidad trabecular (r = 0.82) |
+| BUA | Atenuación de ultrasonido de banda ancha | dB/MHz | indicador principal; refleja porosidad trabecular (r = 0.82) |
 | UV | Velocidad del ultrasonido | m/s | se correlaciona con elasticidad y densidad aparente |
 | ATT | Coeficiente de atenuación | dB/cm | pérdida total de energía; se registra, no puntúa |
 | BV/TV | Fracción volumétrica ósea predicha | adimensional | estimada por regresión |
@@ -34,7 +34,7 @@ Rangos aceptados:
 
 | Variable | Rango |
 | --- | --- |
-| BUA | `0 < BUA < 200` dB/MHz/cm |
+| BUA | `0 < BUA < 200` dB/MHz |
 | UV | `1200 ≤ UV ≤ 2000` m/s |
 | ATT | `0 < ATT < 200` dB/cm |
 
@@ -57,6 +57,18 @@ Un UV de `1.5` (km/s) produce un BV/TV negativo: por eso la API responde 422 en 
 
 La pérdida acumulada de 3 % se acerca al límite superior observado en calcáneo (2.9 % ± 1.0 % en
 4–6 meses, n = 29).
+
+## Referencia poblacional
+
+Cada medición se contrasta con el grupo etario y sexual del astronauta (Shin et al., 2005):
+`Z = (valor − media)/DE` y `T = (valor − media joven)/DE joven`. Clasificación OMS por T:
+normal > −1,0; osteopenia −2,5 a −1,0; osteoporosis ≤ −2,5. El resultado incluye media ± DE,
+Z, T y estado, y se muestra junto al nivel de triage (estado vs. velocidad de pérdida).
+
+La tabla de 12 grupos vive en `backend/app/data/reference_ultrasound.json` y se regenera desde
+`_local/Ultrasonido.xlsx` con `mise run reference` (o
+`uv run python -m app.scripts.build_reference`). La fuente es una población coreana de 3.053
+adultos: es una referencia, no un diagnóstico.
 
 ## Decisiones de implementación
 

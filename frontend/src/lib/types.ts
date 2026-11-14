@@ -1,8 +1,34 @@
 export type Site = "calcaneus" | "femoral_neck";
+export type Sex = "male" | "female";
+export type BoneStatus = "normal" | "osteopenia" | "osteoporosis" | "unknown";
 
 export interface Astronaut {
   code: string;
   name: string;
+  sex: Sex | null;
+  birth_date: string | null;
+  age: number | null;
+}
+
+export interface ReferenceMetric {
+  mean: number;
+  sd: number;
+  z: number | null;
+  t: number | null;
+  status: BoneStatus;
+}
+
+export interface Reference {
+  sex: Sex;
+  age: number;
+  age_band: string;
+  n: number;
+  clamped: boolean;
+  source: string;
+  population: string;
+  bua: ReferenceMetric;
+  sos: ReferenceMetric;
+  status: BoneStatus;
 }
 
 export interface Point {
@@ -18,6 +44,11 @@ export interface Point {
   level: 1 | 2 | 3;
   level_name: string;
   level_tip: string;
+  bua_z: number | null;
+  sos_z: number | null;
+  bua_t: number | null;
+  sos_t: number | null;
+  bone_status: BoneStatus;
 }
 
 export interface ModelInfo {
@@ -32,8 +63,18 @@ export interface Assessment {
   baseline: Point | null;
   points: Point[];
   current: Point | null;
+  reference: Reference | null;
   warnings: string[];
   model: ModelInfo;
+}
+
+export interface ReferenceInfo {
+  source: string;
+  population: string;
+  bua_unit: string;
+  sos_unit: string;
+  age_bands: string[];
+  t_thresholds: { osteopenia: number; osteoporosis: number };
 }
 
 export interface Meta {
@@ -53,6 +94,7 @@ export interface Meta {
     att_max: number;
   };
   units: { bua: string; uv: string; att: string };
+  reference: ReferenceInfo;
 }
 
 export interface MeasurementInput {
@@ -71,6 +113,12 @@ export interface Measurement {
   uv: number;
   att: number | null;
   source: string;
+}
+
+export interface AstronautPatch {
+  name?: string;
+  sex?: Sex;
+  birth_date?: string;
 }
 
 export interface ImportRowError {

@@ -52,7 +52,12 @@ class Settings(BaseSettings):
     level_alert_rate: float = 1.5
     level_alert_cumulative: float = 3.0
 
+    # Clasificacion por referencia poblacional (convencion OMS sobre T-score).
+    bone_t_osteopenia: float = -1.0
+    bone_t_osteoporosis: float = -2.5
+
     # Rangos fisicos aceptados en la captura (no se extrapola fuera de ellos).
+    # BUA en dB/MHz (misma unidad que la tabla de referencia Shin et al.).
     bua_min: float = 0.0
     bua_max: float = 200.0
     uv_min: float = 1200.0

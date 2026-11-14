@@ -29,7 +29,15 @@ def clean_measurements():
 
 
 def _create_astronaut(client: TestClient, code: str) -> None:
-    response = client.post(f"{API}/astronauts", json={"code": code, "name": "Test"})
+    response = client.post(
+        f"{API}/astronauts",
+        json={
+            "code": code,
+            "name": "Test",
+            "sex": "male",
+            "birth_date": "1985-04-12",
+        },
+    )
     assert response.status_code in (201, 409)
 
 
@@ -45,6 +53,10 @@ def test_meta_exposes_model_and_thresholds(client: TestClient) -> None:
     assert body["model"]["version"] == "scan-2013-v1"
     assert body["thresholds"]["alert_cumulative"] == 3.0
     assert body["languages"] == ["es", "en"]
+    assert body["units"]["bua"] == "dB/MHz"
+    assert body["reference"]["source"].startswith("Shin et al.")
+    assert body["reference"]["age_bands"][0] == "20-29"
+    assert body["reference"]["t_thresholds"]["osteoporosis"] == -2.5
 
 
 def test_measurement_flow_and_assessment(client: TestClient) -> None:
@@ -76,6 +88,54 @@ def test_measurement_flow_and_assessment(client: TestClient) -> None:
     assert assessment["current"]["day"] == 30
     assert assessment["current"]["level_name"] == "Normal"
     assert assessment["model"]["references"][0] == "https://doi.org/10.1117/12.810048"
+
+    population = assessment["reference"]
+    assert population["age_band"] == "40-49"
+    assert population["n"] == 137
+    assert population["bua"]["mean"] == pytest.approx(119.2)
+    assert population["bua"]["sd"] == pytest.approx(13.9)
+    assert population["bua"]["z"] == pytest.approx((77.5 - 119.2) / 13.9, abs=1e-3)
+    assert population["bua"]["t"] == pytest.approx((77.5 - 121.4) / 15.6, abs=1e-3)
+    assert population["sos"]["mean"] == pytest.approx(1548.7)
+    assert population["bua"]["status"] == "osteoporosis"
+    assert population["status"] == "osteoporosis"
+    assert assessment["current"]["bone_status"] == "osteoporosis"
+
+
+def test_profile_update_recomputes_reference(client: TestClient) -> None:
+    _create_astronaut(client, "T-07")
+    payload = {
+        "measured_on": "2026-07-01",
+        "site": "calcaneus",
+        "bua": 114.0,
+        "uv": 1548.0,
+        "att": 50.0,
+    }
+    assert client.post(f"{API}/astronauts/T-07/measurements", json=payload).status_code == 201
+
+    before = client.get(f"{API}/astronauts/T-07/monitoring").json()
+    assert before["reference"]["age_band"] == "40-49"
+
+    patched = client.patch(
+        f"{API}/astronauts/T-07",
+        json={"sex": "female", "birth_date": "1991-02-01"},
+    )
+    assert patched.status_code == 200, patched.text
+    assert patched.json()["age"] == 35
+
+    after = client.get(f"{API}/astronauts/T-07/monitoring").json()
+    assert after["reference"]["age_band"] == "30-39"
+    assert after["reference"]["bua"]["mean"] == pytest.approx(113.9)
+    assert after["reference"]["status"] == "normal"
+
+
+def test_astronaut_table_has_profile_columns() -> None:
+    from sqlalchemy import inspect
+
+    from app.infrastructure.database import get_engine
+
+    columns = {column["name"] for column in inspect(get_engine()).get_columns("astronaut")}
+    assert {"sex", "birth_date"} <= columns
 
 
 def test_english_labels_and_errors(client: TestClient) -> None:

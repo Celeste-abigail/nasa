@@ -19,6 +19,9 @@ class Astronaut(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     code: str = Field(sa_column=Column(String(32), unique=True, index=True, nullable=False))
     name: str = Field(default="", sa_column=Column(String(120), nullable=False, default=""))
+    # Perfil para la referencia poblacional. Nullable para no romper datos previos.
+    sex: str | None = Field(default=None, sa_column=Column(String(8), nullable=True))
+    birth_date: date | None = Field(default=None, sa_column=Column(Date, nullable=True))
     created_at: datetime = Field(
         default_factory=utcnow,
         sa_column=Column(DateTime, nullable=False),

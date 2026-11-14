@@ -15,6 +15,9 @@ const frontend = join(root, "frontend");
 
 const isWindows = process.platform === "win32";
 const venvPython = join(backend, ".venv", isWindows ? "Scripts/python.exe" : "bin/python");
+// Si el script corre con bun, reutilizamos ese mismo binario para el hijo:
+// asi `bun run dev` funciona aunque bun no este en el PATH de la terminal.
+const bun = process.versions.bun ? process.execPath : "bun";
 
 function fail(message) {
   console.error(`\n  ${message}\n`);
@@ -94,4 +97,4 @@ run(
   backend,
 );
 
-run("web", "35", "bun", ["run", "dev"], frontend);
+run("web", "35", bun, ["run", "dev"], frontend);

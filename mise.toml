@@ -37,3 +37,8 @@ run = "bun scripts/check.mjs --lint"
 description = "Carga datos de ejemplo en la base .db"
 dir = "backend"
 run = "uv run python -m app.scripts.seed"
+
+[tasks.reference]
+description = "Regenera la referencia poblacional desde _local/Ultrasonido.xlsx"
+dir = "backend"
+run = "uv run python -m app.scripts.build_reference"

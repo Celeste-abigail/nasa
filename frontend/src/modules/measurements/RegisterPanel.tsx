@@ -178,7 +178,7 @@ export function RegisterPanel({
                 type="number"
                 step="0.01"
                 inputMode="decimal"
-                placeholder="78.00"
+                placeholder="118.00"
                 value={bua}
                 onChange={(event) => setBua(event.target.value)}
               />
@@ -251,6 +251,12 @@ export function RegisterPanel({
               {preview.rate_pct_month === null
                 ? "—"
                 : `${fmt(preview.rate_pct_month, lang, 2)} %/mes`}
+            </dd>
+            <dt>{t("register.review.reference")}</dt>
+            <dd>
+              <span className={`badge bone-${preview.bone_status}`}>
+                {t(`bone.${preview.bone_status}`)}
+              </span>
             </dd>
           </dl>
 

@@ -38,6 +38,7 @@ o en un paso: `bun run setup`.
 | `mise run test` | ruff + pytest + tsc + vitest |
 | `mise run lint` | ruff + tsc |
 | `mise run seed` | datos de ejemplo (AST-01 / AST-02) |
+| `mise run reference` | regenera la referencia desde `_local/Ultrasonido.xlsx` |
 
 ### Qué hace exactamente `bun run dev`
 
@@ -150,3 +151,30 @@ Vite.
 | `NASA_LEVEL_RISK_RATE` | `0.8` |
 | `NASA_LEVEL_ALERT_RATE` | `1.5` |
 | `NASA_LEVEL_ALERT_CUMULATIVE` | `3.0` |
+
+## 10. Referencia poblacional
+
+- El artefacto versionado es `backend/app/data/reference_ultrasound.json` (12 grupos).
+- Se regenera desde `_local/Ultrasonido.xlsx` (no versionado) con `mise run reference`.
+- Campos del astronauta que la alimentan: `sex` (`male`/`female`) y `birth_date`. La edad se
+  calcula a la fecha de cada medición, no a la fecha actual.
+- Si faltan esos campos, la evaluación devuelve `reference: null` y el estado `unknown`; nada se
+  inventa.
+- La base se migra sola al arrancar: `init_db()` agrega `sex` y `birth_date` con `ALTER TABLE` si
+  la `.db` es anterior. No borra datos.
+
+## 11. Shells (PowerShell y Git Bash)
+
+El proyecto se usa igual desde ambos. `bun run dev` no depende de que `bun` esté en el PATH para
+lanzar Vite (usa `process.execPath`), pero sí para invocar `bun` desde la terminal.
+
+```powershell
+# PowerShell: perfil con mise (requiere ExecutionPolicy RemoteSigned)
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+```
+
+```bash
+# Git Bash: ~/.bashrc con `eval "$(mise activate bash)"`
+```
+
+Si un shell no reconoce `bun`, abre una terminal nueva o usa `export PATH="$PATH:/c/Users/Windows/.bun/bin"`.

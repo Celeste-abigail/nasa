@@ -114,13 +114,49 @@ punto de extensión listo para métricas o auditoría.
 | Nivel 2 Riesgo | 0.8 ≤ tasa ≤ 1.5 %/mes |
 | Nivel 3 Alerta | tasa > 1.5 %/mes **o** pérdida acumulada > 3 % |
 
-Validación de dominio (se rechaza, no se extrapola): `0 < BUA < 200 dB/MHz/cm`,
+Validación de dominio (se rechaza, no se extrapola): `0 < BUA < 200 dB/MHz`,
 `1200 ≤ UV ≤ 2000 m/s`, `0 < ATT < 200 dB/cm`. La fecha de sesión debe ser posterior a la línea
 base. ATT se almacena y se muestra, pero no puntúa: el modelo publicado no lo incluye.
 
 Referencias: [10.1117/12.810048](https://doi.org/10.1117/12.810048),
 [10.1016/j.actaastro.2012.08.032](https://doi.org/10.1016/j.actaastro.2012.08.032),
 [10.1121/1.4784949](https://doi.org/10.1121/1.4784949).
+
+## Referencia poblacional (Shin et al., 2005)
+
+El astronauta necesita **sexo** y **fecha de nacimiento**. La edad se calcula a la fecha de cada
+medición y se busca su grupo en la tabla de 12 grupos (2 sexos × 6 rangos) generada desde
+`_local/Ultrasonido.xlsx`:
+
+| Sexo | Edad | n | BUA media ± DE (dB/MHz) | SOS media ± DE (m/s) |
+|---|---|---:|---|---|
+| Hombre | 20-29 | 50 | 121,4 ± 15,6 | 1556,1 ± 47,7 |
+| Hombre | 30-39 | 77 | 121,2 ± 15,7 | 1554,6 ± 40,2 |
+| Hombre | 40-49 | 137 | 119,2 ± 13,9 | 1548,7 ± 40,7 |
+| Hombre | 50-59 | 327 | 114,2 ± 13,1 | 1545,0 ± 35,0 |
+| Hombre | 60-69 | 506 | 111,6 ± 13,8 | 1541,0 ± 32,4 |
+| Hombre | 70-74 | 128 | 108,7 ± 16,0 | 1527,3 ± 30,8 |
+| Mujer | 20-29 | 55 | 113,2 ± 13,6 | 1556,1 ± 28,2 |
+| Mujer | 30-39 | 109 | 113,9 ± 13,9 | 1548,5 ± 29,4 |
+| Mujer | 40-49 | 228 | 111,1 ± 13,8 | 1547,3 ± 32,1 |
+| Mujer | 50-59 | 519 | 105,2 ± 12,9 | 1537,3 ± 28,0 |
+| Mujer | 60-69 | 756 | 95,4 ± 11,7 | 1520,8 ± 23,0 |
+| Mujer | 70-74 | 161 | 90,2 ± 11,7 | 1507,6 ± 20,5 |
+
+Con esa tabla se calculan, para BUA y para SOS:
+
+```
+Z = (valor − media del grupo) / DE del grupo      (ajuste por edad y sexo)
+T = (valor − media del grupo 20-29 del sexo) / DE de ese grupo
+```
+
+Clasificación por convención OMS sobre **T**: `> -1,0` normal, `-2,5 < T ≤ -1,0` osteopenia,
+`T ≤ -2,5` osteoporosis. Se reporta el peor de BUA/SOS y el nivel de triage sigue calculándose por
+tasa de pérdida (son ejes distintos: estado vs. velocidad).
+
+Fuera de 20-74 años se usa el grupo extremo más cercano y se emite un aviso. El origen y la
+población (coreana, n = 3.053) se muestran junto al resultado: es una referencia poblacional, no un
+diagnóstico clínico.
 
 ## API
 
@@ -130,7 +166,8 @@ Referencias: [10.1117/12.810048](https://doi.org/10.1117/12.810048),
 | GET | `/api/v1/health` | alias dentro del prefijo versionado |
 | GET | `/api/v1/meta` | modelo, umbrales, unidades, sitios e idiomas |
 | GET | `/api/v1/astronauts` | lista de astronautas |
-| POST | `/api/v1/astronauts` | alta (`{"code","name"}`) |
+| POST | `/api/v1/astronauts` | alta (`{"code","name","sex","birth_date"}`) |
+| PATCH | `/api/v1/astronauts/{code}` | perfil: sexo, fecha de nacimiento, nombre |
 | GET | `/api/v1/astronauts/{code}` | detalle |
 | GET | `/api/v1/astronauts/{code}/measurements?site=` | mediciones |
 | POST | `/api/v1/astronauts/{code}/measurements` | alta de medición |
@@ -154,7 +191,7 @@ Formatos: **CSV**, **XLSX** y **JSON**. El formato se detecta por extensión.
 
 ```csv
 date,bua,uv,att,site
-2026-07-01,78.0,1560,52,calcaneus
+2026-07-01,118.0,1552,52,calcaneus
 2026-07-31,77.5,1556,51.6,calcaneus
 ```
 
@@ -179,7 +216,7 @@ El módulo óseo no está cableado a la API:
 
 ## Estado
 
-- 27 tests de backend (dominio + API) y 4 de frontend en verde.
+- 52 tests de backend (dominio, referencia y API) y 4 de frontend en verde.
 - Ruff limpio, TypeScript estricto y build de producción verificado.
 - Base local creada por uvicorn y hot reload comprobado en `bun run dev`.
 

@@ -5,7 +5,15 @@ from sqlmodel import Session
 
 from app.api.deps import get_lang
 from app.core.config import settings
-from app.domain.schemas import AssessmentOut, MeasurementCreate, MetaOut, PointOut, Site
+from app.domain import reference
+from app.domain.schemas import (
+    AssessmentOut,
+    MeasurementCreate,
+    MetaOut,
+    PointOut,
+    ReferenceInfoOut,
+    Site,
+)
 from app.infrastructure.database import get_session
 from app.modules.measurements.service import validate_payload
 from app.modules.monitoring import service
@@ -47,6 +55,11 @@ def preview_measurement(
 
 @router.get("/meta", response_model=MetaOut)
 def get_meta() -> MetaOut:
+    meta = reference.metadata()
+    bands = sorted(
+        {group.age_band for group in reference.groups()},
+        key=lambda band: int(band.split("-")[0]),
+    )
     return MetaOut(
         app_name=settings.app_name,
         model=service.model_info(),
@@ -63,7 +76,18 @@ def get_meta() -> MetaOut:
             "att_min": settings.att_min,
             "att_max": settings.att_max,
         },
-        units={"bua": "dB/MHz/cm", "uv": "m/s", "att": "dB/cm"},
+        units={"bua": "dB/MHz", "uv": "m/s", "att": "dB/cm"},
+        reference=ReferenceInfoOut(
+            source=meta.source,
+            population=meta.population,
+            bua_unit=meta.bua_unit,
+            sos_unit=meta.sos_unit,
+            age_bands=bands,
+            t_thresholds={
+                "osteopenia": settings.bone_t_osteopenia,
+                "osteoporosis": settings.bone_t_osteoporosis,
+            },
+        ),
     )
 
 
