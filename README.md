@@ -5,9 +5,10 @@ Implementa el método **SCAN** (Scanning Confocal Acoustic Navigation): captura 
 **ATT**, estima **BV/TV** con la regresión publicada, calcula la tendencia de pérdida frente a la
 línea base y clasifica el riesgo en tres niveles.
 
-El proyecto está diseñado como plataforma de salud del astronauta: el módulo óseo es el primero y
-el núcleo (`backend/app/domain`) está preparado para sumar cortisol y otros factores sin reescribir
-la aplicación.
+El proyecto está diseñado como plataforma de salud del astronauta con cuatro módulos independientes:
+densidad ósea (SCAN), cortisol salival, radiación (TEPC) y salud mental (NASA-TLX + DMRS). Cada uno
+tiene su propia fuente de datos y su propia tabla; el núcleo compartido es el perfil del astronauta
+y el motor de alertas.
 
 ```
 plan -> medir -> evaluar -> alertar -> registrar
@@ -179,6 +180,37 @@ z = (ln(valor) − ln(mediana(hora))) / σ_ln        verde |z| ≤ 1,28 · amari
 La vista se cambia con las pestañas **Densidad ósea** / **Cortisol** del encabezado; el astronauta
 y el idioma son compartidos.
 
+## Módulo de radiación (TEPC)
+
+Sección independiente construida sobre `_local/data_radiacion.csv` (export ASCII del TEPC: un día,
+1.441 muestras de 60 s, solo tasa equivalente). La referencia se genera con
+`mise run radiation-reference` y produce P50/P95/P99 por estrato con retroceso jerárquico. Con esta
+base queda un **estrato general** (las franjas horarias no alcanzan el mínimo de 120) y la **capa
+diaria en “insuficiente”**.
+
+Clasificación en tres capas, color final = la peor:
+
+- **A instantánea**: `≤P95` verde, `P95–P99` amarillo, `>P99` rojo solo si 3 lecturas seguidas.
+- **B diaria**: dosis del día vs referencia diaria (no disponible con un solo día).
+- **C acumulada**: `F30 = H30/250 mSv`, `F_carrera = (previa + misión + proyección)/600 mSv`.
+
+Entrada: fecha-hora UTC, µSv/min, µGy/min opcional (para `Q̄`), región manual GCR/SAA, módulo, día
+de misión, duración y dosis previa. Detalle en [docs/radiation-spec.md](docs/radiation-spec.md).
+
+## Módulo de salud mental (NASA-TLX + DMRS + ALI)
+
+Sección independiente con la parte psicométrica de `mental.md` (sin su dosimetría TLD/CR-39):
+
+- **NASA-TLX** por tarea en modo `WEIGHTED_FULL` (tallies que suman 15) o `RAW_FAST` (pesos 1/6).
+- **DMRS** diario (8 ítems) con subíndices PA/NA y puntaje global.
+- **WL diaria** ponderada por duración, **EWMA α=0,35**, **Z** de 7 días con piso σ=5,
+  **ALI = 0,55·EWMA_WL + 0,45·(100−EWMA_ánimo)** y penalización de +8 por deuda de sueño.
+- **4 zonas** (verde/amarilla/naranja/roja) con el protocolo del documento; la dosis aguda es un
+  campo manual opcional.
+
+El ejemplo del documento se reproduce (TLX 70,6667; DMRS 64,5). Detalle en
+[docs/mental-spec.md](docs/mental-spec.md).
+
 ## API
 
 | Método | Ruta | Descripción |
@@ -198,6 +230,10 @@ y el idioma son compartidos.
 | POST | `/api/v1/astronauts/{code}/cortisol` | registra y evalúa una muestra de cortisol |
 | GET | `/api/v1/astronauts/{code}/cortisol?days=` | serie de cortisol, razón y basal |
 | POST | `/api/v1/astronauts/{code}/cortisol/import` | importa muestras (CSV/XLSX/JSON) |
+| GET | `/api/v1/astronauts/{code}/radiation` | lecturas + capas A/B/C + acumulados |
+| POST | `/api/v1/astronauts/{code}/radiation` | registra una lectura (UTC) |
+| GET | `/api/v1/astronauts/{code}/mental?days=` | serie diaria + zona actual |
+| PUT | `/api/v1/astronauts/{code}/mental/{date}` | guarda/reemplaza el día (TLX + DMRS) |
 
 Todas las respuestas de error usan `{"detail": "...", "code": "..."}` en el idioma solicitado.
 
@@ -240,7 +276,7 @@ El módulo óseo no está cableado a la API:
 
 ## Estado
 
-- 90 tests de backend (dominio, referencia, cortisol y API) y 4 de frontend en verde.
+- 127 tests de backend (dominio, referencias, cortisol, radiación, salud mental y API) y 4 de frontend en verde.
 - Ruff limpio, TypeScript estricto y build de producción verificado.
 - Base local creada por uvicorn y hot reload comprobado en `bun run dev`.
 

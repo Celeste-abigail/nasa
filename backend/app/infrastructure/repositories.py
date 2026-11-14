@@ -6,7 +6,14 @@ from datetime import date, datetime
 
 from sqlmodel import Session, select
 
-from app.domain.models import Astronaut, CortisolSample, Measurement
+from app.domain.models import (
+    Astronaut,
+    CortisolSample,
+    Measurement,
+    MentalDay,
+    MentalTask,
+    RadiationReading,
+)
 
 
 def list_astronauts(session: Session) -> list[Astronaut]:
@@ -119,3 +126,66 @@ def add_cortisol_sample(
     session.commit()
     session.refresh(sample)
     return sample
+
+
+def list_radiation_readings(session: Session, astronaut_id: int) -> list[RadiationReading]:
+    stmt = (
+        select(RadiationReading)
+        .where(RadiationReading.astronaut_id == astronaut_id)
+        .order_by(RadiationReading.measured_at, RadiationReading.id)
+    )
+    return list(session.exec(stmt).all())
+
+
+def add_radiation_reading(
+    session: Session,
+    astronaut_id: int,
+    measured_at: datetime,
+    eq_rate_usv_min: float,
+    dose_rate_ugy_min: float | None,
+    region: str,
+    module: str | None,
+    mission_day: int | None,
+    planned_days: int | None,
+    prior_career_msv: float | None,
+    notes: str | None,
+    source: str = "manual",
+) -> RadiationReading:
+    reading = RadiationReading(
+        astronaut_id=astronaut_id,
+        measured_at=measured_at,
+        eq_rate_usv_min=eq_rate_usv_min,
+        dose_rate_ugy_min=dose_rate_ugy_min,
+        region=region,
+        module=module,
+        mission_day=mission_day,
+        planned_days=planned_days,
+        prior_career_msv=prior_career_msv,
+        notes=notes,
+        source=source,
+    )
+    session.add(reading)
+    session.commit()
+    session.refresh(reading)
+    return reading
+
+
+def get_mental_day(session: Session, astronaut_id: int, day: date) -> MentalDay | None:
+    stmt = select(MentalDay).where(MentalDay.astronaut_id == astronaut_id, MentalDay.day == day)
+    return session.exec(stmt).first()
+
+
+def list_mental_days(session: Session, astronaut_id: int) -> list[MentalDay]:
+    stmt = select(MentalDay).where(MentalDay.astronaut_id == astronaut_id).order_by(MentalDay.day)
+    return list(session.exec(stmt).all())
+
+
+def list_mental_tasks(session: Session, day_id: int) -> list[MentalTask]:
+    stmt = select(MentalTask).where(MentalTask.day_id == day_id).order_by(MentalTask.id)
+    return list(session.exec(stmt).all())
+
+
+def delete_mental_tasks(session: Session, day_id: int) -> None:
+    for task in list_mental_tasks(session, day_id):
+        session.delete(task)
+    session.commit()

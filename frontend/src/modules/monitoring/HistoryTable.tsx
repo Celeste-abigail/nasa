@@ -24,6 +24,7 @@ export function HistoryTable({ points, lang }: Props) {
           <tr>
             <th>{t("table.date")}</th>
             <th>{t("table.day")}</th>
+            <th>{t("table.month")}</th>
             <th>{t("table.bua")}</th>
             <th>{t("table.uv")}</th>
             <th>{t("table.att")}</th>
@@ -40,6 +41,7 @@ export function HistoryTable({ points, lang }: Props) {
             <tr key={`${point.measured_on}-${point.bua}`}>
               <td>{point.measured_on}</td>
               <td>{point.day}</td>
+              <td>{fmt(point.month, lang, 1)}</td>
               <td>{fmt(point.bua, lang, 2)}</td>
               <td>{fmt(point.uv, lang, 0)}</td>
               <td>{point.att === null ? "—" : fmt(point.att, lang, 2)}</td>

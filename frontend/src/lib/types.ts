@@ -31,9 +31,17 @@ export interface Reference {
   status: BoneStatus;
 }
 
+export interface Recommendation {
+  level: number;
+  title: string;
+  items: string[];
+  disclaimer: string;
+}
+
 export interface Point {
   measured_on: string;
   day: number;
+  month: number;
   bua: number;
   uv: number;
   att: number | null;
@@ -64,6 +72,7 @@ export interface Assessment {
   points: Point[];
   current: Point | null;
   reference: Reference | null;
+  recommendations: Recommendation;
   warnings: string[];
   model: ModelInfo;
 }
@@ -96,6 +105,7 @@ export interface Meta {
   units: { bua: string; uv: string; att: string };
   reference: ReferenceInfo;
   cortisol: CortisolReference;
+  radiation: RadiationReference;
 }
 
 export interface MeasurementInput {
@@ -211,5 +221,163 @@ export interface CortisolSampleInput {
   unit: CortisolUnit;
   wake_time?: string | null;
   mission_phase?: MissionPhase | null;
+  notes?: string | null;
+}
+
+// --- Radiacion (TEPC) ---
+
+export type Region = "gcr" | "saa" | "unknown";
+
+export interface RadiationLayer {
+  color: number | null;
+  status: string;
+  value: number | null;
+  p95: number | null;
+  p99: number | null;
+  fraction: number | null;
+  detail: string;
+}
+
+export interface RadiationReading {
+  id: number;
+  measured_at: string;
+  eq_rate_usv_min: number;
+  dose_rate_ugy_min: number | null;
+  region: Region;
+  module: string | null;
+  mission_day: number | null;
+  planned_days: number | null;
+  prior_career_msv: number | null;
+  notes: string | null;
+  source: string;
+  q_factor: number | null;
+}
+
+export interface RadiationCumulative {
+  h_30d_msv: number | null;
+  f30: number | null;
+  h_total_msv: number | null;
+  projection_msv: number | null;
+  f_career: number | null;
+}
+
+export interface RadiationStratum {
+  region: string;
+  hour: number | null;
+  module: string | null;
+  epoch: string | null;
+}
+
+export interface RadiationReference {
+  source: string;
+  product: string;
+  period: Record<string, unknown>;
+  metric: string;
+  unit: string;
+  stratum: RadiationStratum | null;
+  used_fallback: boolean;
+  daily_available: boolean;
+  min_cell_n: number;
+  limits: Record<string, number>;
+  thresholds: Record<string, number>;
+  notes: string;
+}
+
+export interface RadiationAssessment {
+  astronaut: Astronaut;
+  readings: RadiationReading[];
+  current: RadiationReading | null;
+  layers: { a: RadiationLayer; b: RadiationLayer; c: RadiationLayer };
+  color: number | null;
+  cumulative: RadiationCumulative;
+  reference: RadiationReference;
+  warnings: string[];
+}
+
+export interface RadiationReadingInput {
+  measured_at: string;
+  eq_rate: number;
+  dose_rate?: number | null;
+  region: Region;
+  module?: string | null;
+  mission_day?: number | null;
+  planned_days?: number | null;
+  prior_career_msv?: number | null;
+  notes?: string | null;
+}
+
+// --- Salud mental (NASA-TLX + DMRS + ALI) ---
+
+export type TlxMode = "WEIGHTED_FULL" | "RAW_FAST";
+export type MentalZone = "green" | "yellow" | "orange" | "red";
+
+export interface Mood {
+  m1_sleep: number;
+  m2_vigor: number;
+  m3_calm: number;
+  m4_cohesion: number;
+  m5_tension: number;
+  m6_irrit: number;
+  m7_dysphoria: number;
+  m8_somatic: number;
+}
+
+export interface TlxTaskInput {
+  task_ref?: string | null;
+  category?: string | null;
+  name?: string | null;
+  duration_min: number;
+  eval_mode: TlxMode;
+  ratings: Record<string, number>;
+  tallies?: Record<string, number> | null;
+}
+
+export interface TlxTask {
+  id: number;
+  task_ref: string | null;
+  category: string | null;
+  name: string | null;
+  duration_min: number;
+  eval_mode: TlxMode;
+  ratings: Record<string, number>;
+  weights: Record<string, number>;
+  overall: number;
+}
+
+export interface MentalDay {
+  day: string;
+  mission_day: number | null;
+  wl_day: number;
+  dmrs: number;
+  pa: number;
+  na: number;
+  z_wl: number;
+  z_dmrs: number;
+  ewma_wl: number;
+  ewma_mood: number;
+  ali: number;
+  sleep_debt: boolean;
+  burnout: boolean;
+  acute_radiation: boolean;
+  zone: MentalZone;
+  color: number;
+  reasons: string[];
+  mood: Mood;
+  tasks: TlxTask[];
+}
+
+export interface MentalAssessment {
+  astronaut: Astronaut;
+  days: MentalDay[];
+  current: MentalDay | null;
+  thresholds: Record<string, number>;
+  warnings: string[];
+}
+
+export interface MentalDayInput {
+  mission_day?: number | null;
+  mood: Mood;
+  tasks: TlxTaskInput[];
+  acute_24h_dose_mgy?: number | null;
   notes?: string | null;
 }

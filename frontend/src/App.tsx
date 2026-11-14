@@ -5,10 +5,12 @@ import { useTranslation } from "react-i18next";
 import { api } from "./lib/api";
 import type { Site } from "./lib/types";
 import { CortisolView } from "./modules/cortisol/CortisolView";
-import { ImportPanel } from "./modules/measurements/ImportPanel";
-import { ProfilePanel } from "./modules/measurements/ProfilePanel";
+import { ImportPanel } from "./modules/measurements/ImportPanel";import { ProfilePanel } from "./modules/measurements/ProfilePanel";
 import { RegisterPanel } from "./modules/measurements/RegisterPanel";
 import { HistoryTable } from "./modules/monitoring/HistoryTable";
+import { MentalView } from "./modules/mental/MentalView";
+import { RecommendationsPanel } from "./modules/monitoring/RecommendationsPanel";
+import { RadiationView } from "./modules/radiation/RadiationView";
 import { StatusPanel } from "./modules/monitoring/StatusPanel";
 import { TrendChart } from "./modules/monitoring/TrendChart";
 import { Header } from "./modules/shell/Header";
@@ -22,9 +24,12 @@ export default function App() {
 
   const [astronaut, setAstronaut] = useState("");
   const [site, setSite] = useState<Site>("calcaneus");
-  const [view, setView] = useState<"bone" | "cortisol">(() =>
-    localStorage.getItem("nasa-space-view") === "cortisol" ? "cortisol" : "bone",
-  );
+  const [view, setView] = useState<"bone" | "cortisol" | "radiation" | "mental">(() => {
+    const stored = localStorage.getItem("nasa-space-view");
+    return stored === "cortisol" || stored === "radiation" || stored === "mental"
+      ? stored
+      : "bone";
+  });
 
   useEffect(() => {
     localStorage.setItem("nasa-space-view", view);
@@ -82,6 +87,22 @@ export default function App() {
       {view === "cortisol" ? (
         active ? (
           <CortisolView astronaut={active} lang={lang} onToast={show} />
+        ) : (
+          <section className="panel">
+            <div className="empty">{t("common.loading")}</div>
+          </section>
+        )
+      ) : view === "radiation" ? (
+        active ? (
+          <RadiationView astronaut={active} lang={lang} onToast={show} />
+        ) : (
+          <section className="panel">
+            <div className="empty">{t("common.loading")}</div>
+          </section>
+        )
+      ) : view === "mental" ? (
+        active ? (
+          <MentalView astronaut={active} lang={lang} onToast={show} />
         ) : (
           <section className="panel">
             <div className="empty">{t("common.loading")}</div>
@@ -149,6 +170,9 @@ export default function App() {
                 warnings={assessment?.warnings ?? []}
                 lang={lang}
               />
+              {assessment && (
+                <RecommendationsPanel recommendation={assessment.recommendations} />
+              )}
             </div>
 
             <div>

@@ -11,8 +11,8 @@ interface Props {
   lang: string;
   onLang: (lang: string) => void;
   modelVersion?: string;
-  view: "bone" | "cortisol";
-  onView: (view: "bone" | "cortisol") => void;
+  view: "bone" | "cortisol" | "radiation" | "mental";
+  onView: (view: "bone" | "cortisol" | "radiation" | "mental") => void;
 }
 
 export function Header({
@@ -47,6 +47,22 @@ export function Header({
           onClick={() => onView("cortisol")}
         >
           {t("view.cortisol")}
+        </button>
+        <button
+          type="button"
+          className={view === "radiation" ? "on" : ""}
+          aria-pressed={view === "radiation"}
+          onClick={() => onView("radiation")}
+        >
+          {t("view.radiation")}
+        </button>
+        <button
+          type="button"
+          className={view === "mental" ? "on" : ""}
+          aria-pressed={view === "mental"}
+          onClick={() => onView("mental")}
+        >
+          {t("view.mental")}
         </button>
       </div>
 

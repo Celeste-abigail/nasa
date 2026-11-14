@@ -75,6 +75,7 @@ class ReferenceOut(BaseModel):
 class PointOut(BaseModel):
     measured_on: date
     day: int
+    month: float
     bua: float
     uv: float
     att: float | None
@@ -99,6 +100,13 @@ class ModelInfo(BaseModel):
     references: list[str]
 
 
+class RecommendationOut(BaseModel):
+    level: int
+    title: str
+    items: list[str]
+    disclaimer: str
+
+
 class AssessmentOut(BaseModel):
     astronaut: AstronautOut
     site: Site
@@ -106,6 +114,7 @@ class AssessmentOut(BaseModel):
     points: list[PointOut]
     current: PointOut | None
     reference: ReferenceOut | None
+    recommendations: RecommendationOut
     warnings: list[str]
     model: ModelInfo
 
@@ -212,6 +221,165 @@ class CortisolAssessmentOut(BaseModel):
     reference: CortisolReferenceOut
 
 
+# --- Modulo de radiacion (TEPC) ---
+
+Region = Literal["gcr", "saa", "unknown"]
+
+
+class RadiationReadingCreate(BaseModel):
+    measured_at: datetime
+    eq_rate: float
+    dose_rate: float | None = None
+    region: Region = "unknown"
+    module: str | None = Field(default=None, max_length=64)
+    mission_day: int | None = Field(default=None, ge=0, le=2000)
+    planned_days: int | None = Field(default=None, ge=1, le=2000)
+    prior_career_msv: float | None = Field(default=None, ge=0, le=1000)
+    notes: str | None = Field(default=None, max_length=500)
+
+
+class RadiationLayerOut(BaseModel):
+    color: int | None
+    status: str
+    value: float | None = None
+    p95: float | None = None
+    p99: float | None = None
+    fraction: float | None = None
+    detail: str
+
+
+class RadiationReadingOut(BaseModel):
+    id: int
+    measured_at: datetime
+    eq_rate_usv_min: float
+    dose_rate_ugy_min: float | None
+    region: Region
+    module: str | None
+    mission_day: int | None
+    planned_days: int | None
+    prior_career_msv: float | None
+    notes: str | None
+    source: str
+    q_factor: float | None
+
+
+class RadiationCumulativeOut(BaseModel):
+    h_30d_msv: float | None
+    f30: float | None
+    h_total_msv: float | None
+    projection_msv: float | None
+    f_career: float | None
+
+
+class RadiationStratumOut(BaseModel):
+    region: str
+    hour: int | None
+    module: str | None
+    epoch: str | None
+
+
+class RadiationReferenceOut(BaseModel):
+    source: str
+    product: str
+    period: dict
+    metric: str
+    unit: str
+    stratum: RadiationStratumOut | None
+    used_fallback: bool
+    daily_available: bool
+    min_cell_n: int
+    limits: dict[str, float]
+    thresholds: dict[str, float]
+    notes: str
+
+
+class RadiationAssessmentOut(BaseModel):
+    astronaut: AstronautOut
+    readings: list[RadiationReadingOut]
+    current: RadiationReadingOut | None
+    layers: dict[str, RadiationLayerOut]
+    color: int | None
+    cumulative: RadiationCumulativeOut
+    reference: RadiationReferenceOut
+    warnings: list[str]
+
+
+# --- Modulo de salud mental (NASA-TLX + DMRS + ALI) ---
+
+TlxMode = Literal["WEIGHTED_FULL", "RAW_FAST"]
+
+
+class TlxTaskIn(BaseModel):
+    task_ref: str | None = Field(default=None, max_length=64)
+    category: str | None = Field(default=None, max_length=64)
+    name: str | None = Field(default=None, max_length=200)
+    duration_min: float = Field(gt=0, le=1440)
+    eval_mode: TlxMode = "RAW_FAST"
+    ratings: dict[str, int]
+    tallies: dict[str, int] | None = None
+
+
+class MoodIn(BaseModel):
+    m1_sleep: int = Field(ge=0, le=10)
+    m2_vigor: int = Field(ge=0, le=10)
+    m3_calm: int = Field(ge=0, le=10)
+    m4_cohesion: int = Field(ge=0, le=10)
+    m5_tension: int = Field(ge=0, le=10)
+    m6_irrit: int = Field(ge=0, le=10)
+    m7_dysphoria: int = Field(ge=0, le=10)
+    m8_somatic: int = Field(ge=0, le=10)
+
+
+class MentalDayIn(BaseModel):
+    mission_day: int | None = Field(default=None, ge=0, le=2000)
+    mood: MoodIn
+    tasks: list[TlxTaskIn] = Field(default_factory=list)
+    acute_24h_dose_mgy: float | None = Field(default=None, ge=0, le=5000)
+    notes: str | None = Field(default=None, max_length=500)
+
+
+class TlxTaskOut(BaseModel):
+    id: int
+    task_ref: str | None
+    category: str | None
+    name: str | None
+    duration_min: float
+    eval_mode: TlxMode
+    ratings: dict[str, int]
+    weights: dict[str, float]
+    overall: float
+
+
+class MentalDayOut(BaseModel):
+    day: date
+    mission_day: int | None
+    wl_day: float
+    dmrs: float
+    pa: float
+    na: float
+    z_wl: float
+    z_dmrs: float
+    ewma_wl: float
+    ewma_mood: float
+    ali: float
+    sleep_debt: bool
+    burnout: bool
+    acute_radiation: bool
+    zone: str
+    color: int
+    reasons: list[str]
+    mood: MoodIn
+    tasks: list[TlxTaskOut]
+
+
+class MentalAssessmentOut(BaseModel):
+    astronaut: AstronautOut
+    days: list[MentalDayOut]
+    current: MentalDayOut | None
+    thresholds: dict[str, float]
+    warnings: list[str]
+
+
 class MetaOut(BaseModel):
     app_name: str
     model: ModelInfo
@@ -221,6 +389,7 @@ class MetaOut(BaseModel):
     units: dict[str, str]
     reference: ReferenceInfoOut
     cortisol: CortisolReferenceOut
+    radiation: RadiationReferenceOut
 
 
 class ErrorBody(BaseModel):

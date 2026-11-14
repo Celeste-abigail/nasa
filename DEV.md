@@ -39,6 +39,7 @@ o en un paso: `bun run setup`.
 | `mise run lint` | ruff + tsc |
 | `mise run seed` | datos de ejemplo (AST-01 / AST-02) |
 | `mise run reference` | regenera la referencia desde `_local/Ultrasonido.xlsx` |
+| `mise run radiation-reference` | regenera la referencia desde `_local/data_radiacion.csv` |
 
 ### Qué hace exactamente `bun run dev`
 
@@ -194,3 +195,23 @@ Si un shell no reconoce `bun`, abre una terminal nueva o usa `export PATH="$PATH
 - El cruce con el óseo es solo un aviso (`bone_cross_risk`); no altera el triage de BUA.
 - Regenerar el seed de demo: `mise run seed` (agrega cortisol si falta) o `... seed --force` para
   duplicar series de demo.
+
+## 13. Módulo de radiación
+
+- Referencia: `backend/app/data/radiation_reference.json`, generada desde
+  `_local/data_radiacion.csv` con `mise run radiation-reference`.
+- El CSV entregado cubre **un día** y solo trae tasa equivalente: por eso hay un estrato general y
+  la capa diaria queda insuficiente. Con un export de varios días, el generador produce estratos
+  por región, hora, módulo y época automáticamente.
+- Tabla `radiation_reading`; el color se recalcula al leer.
+- Región manual (GCR/SAA); sin SGP4 no se infiere.
+- Entrada en **UTC** (el formulario lo indica).
+
+## 14. Módulo de salud mental
+
+- Dominio: `backend/app/domain/mental.py` (TLX, DMRS, EWMA, ALI, zonas).
+- Tablas `mental_day` (única por astronauta y fecha) y `mental_task`.
+- `PUT /mental/{date}` es idempotente: reemplaza las tareas de ese día y recalcula la serie.
+- La dosis aguda de la zona roja es un campo manual opcional; no consulta el módulo de radiación.
+- Los umbrales viven en `mental.THRESHOLDS`; cambiarlos recalcula todo el histórico al leer.
+- `seed` carga 5 días de ejemplo para AST-01 y 2 para AST-02.

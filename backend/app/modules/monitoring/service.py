@@ -10,7 +10,7 @@ from sqlmodel import Session
 
 from app.core.config import settings
 from app.core.i18n import level_text, t
-from app.domain import bone, reference
+from app.domain import bone, exercise, reference
 from app.domain.models import Astronaut, Measurement
 from app.domain.schemas import (
     AssessmentOut,
@@ -80,6 +80,7 @@ def _to_point(
     return PointOut(
         measured_on=evaluation.measured_on,
         day=evaluation.day,
+        month=round(evaluation.day / bone.DAYS_PER_MONTH, 2),
         bua=evaluation.bua,
         uv=evaluation.uv,
         att=evaluation.att,
@@ -224,6 +225,7 @@ def build_assessment(
         points=visible,
         current=all_points[-1] if all_points else None,
         reference=reference_out,
+        recommendations=exercise.for_level(all_points[-1].level if all_points else 1, lang),
         warnings=_warnings_for(all_points, lang, current_match),
         model=model_info(),
     )

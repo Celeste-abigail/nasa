@@ -18,6 +18,7 @@ from app.infrastructure.database import get_session
 from app.modules.cortisol import service as cortisol_service
 from app.modules.measurements.service import validate_payload
 from app.modules.monitoring import service
+from app.modules.radiation import service as radiation_service
 
 router = APIRouter(tags=["monitoring"])
 
@@ -90,6 +91,7 @@ def get_meta() -> MetaOut:
             },
         ),
         cortisol=cortisol_service.reference_out(),
+        radiation=radiation_service.reference_out(),
     )
 
 

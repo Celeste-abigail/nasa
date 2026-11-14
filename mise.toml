@@ -42,3 +42,8 @@ run = "uv run python -m app.scripts.seed"
 description = "Regenera la referencia poblacional desde _local/Ultrasonido.xlsx"
 dir = "backend"
 run = "uv run python -m app.scripts.build_reference"
+
+[tasks.radiation-reference]
+description = "Regenera la referencia de radiacion desde _local/data_radiacion.csv"
+dir = "backend"
+run = "uv run python -m app.scripts.build_radiation_reference"

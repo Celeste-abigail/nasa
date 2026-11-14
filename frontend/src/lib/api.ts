@@ -8,8 +8,13 @@ import type {
   ImportReport,
   Measurement,
   MeasurementInput,
+  MentalAssessment,
+  MentalDayInput,
   Meta,
   Point,
+  RadiationAssessment,
+  RadiationReading,
+  RadiationReadingInput,
   Site,
 } from "./types";
 
@@ -130,4 +135,32 @@ export const api = {
       lang,
     );
   },
+
+  radiation: (code: string, lang: string) =>
+    request<RadiationAssessment>(
+      `${BASE}/astronauts/${encodeURIComponent(code)}/radiation`,
+      {},
+      lang,
+    ),
+
+  createRadiation: (code: string, input: RadiationReadingInput, lang: string) =>
+    request<RadiationReading>(
+      `${BASE}/astronauts/${encodeURIComponent(code)}/radiation`,
+      { method: "POST", body: JSON.stringify(input) },
+      lang,
+    ),
+
+  mental: (code: string, lang: string) =>
+    request<MentalAssessment>(
+      `${BASE}/astronauts/${encodeURIComponent(code)}/mental`,
+      {},
+      lang,
+    ),
+
+  saveMental: (code: string, day: string, input: MentalDayInput, lang: string) =>
+    request<MentalAssessment>(
+      `${BASE}/astronauts/${encodeURIComponent(code)}/mental/${day}`,
+      { method: "PUT", body: JSON.stringify(input) },
+      lang,
+    ),
 };

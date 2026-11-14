@@ -57,6 +57,10 @@ export function StatusPanel({ current, reference, warnings, lang }: Props) {
           <b>{current.day}</b>
           <span>{t("monitoring.kpi.days")}</span>
         </div>
+        <div className="kpi">
+          <b>{fmt(current.month, lang, 1)}</b>
+          <span>{t("monitoring.kpi.month")}</span>
+        </div>
       </div>
 
       {reference && (
