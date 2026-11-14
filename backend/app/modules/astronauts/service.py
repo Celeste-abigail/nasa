@@ -10,6 +10,7 @@ from app.core import events
 from app.domain import reference
 from app.domain.errors import ConflictError, NotFoundError, ValidationError
 from app.domain.models import Astronaut
+from app.domain.schemas import AstronautOut
 from app.infrastructure import repositories
 
 MIN_AGE = 18
@@ -29,6 +30,16 @@ def get_one(session: Session, code: str) -> Astronaut:
 
 def age_today(astronaut: Astronaut) -> int | None:
     return reference.age_at(astronaut.birth_date, date.today())
+
+
+def to_out(astronaut: Astronaut) -> AstronautOut:
+    return AstronautOut(
+        code=astronaut.code,
+        name=astronaut.name,
+        sex=astronaut.sex,  # type: ignore[arg-type]
+        birth_date=astronaut.birth_date,
+        age=age_today(astronaut),
+    )
 
 
 def create(

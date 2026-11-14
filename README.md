@@ -158,6 +158,27 @@ Fuera de 20-74 años se usa el grupo extremo más cercano y se emite un aviso. E
 población (coreana, n = 3.053) se muestran junto al resultado: es una referencia poblacional, no un
 diagnóstico clínico.
 
+## Módulo de cortisol (independiente)
+
+La segunda sección de la página evalúa **cortisol salival** por CLIA/ECLIA con un semáforo que
+depende de la **hora exacta** de la muestra:
+
+```
+z = (ln(valor) − ln(mediana(hora))) / σ_ln        verde |z| ≤ 1,28 · amarillo ≤ 1,96 · rojo > 1,96
+```
+
+- Referencia matutina combinada (n = 56): mediana 0,474 µg/dL, σ_ln 0,511; ancla nocturna
+  0,155 µg/dL e interpolación log-lineal entre 07:30 y 21:30.
+- Se guarda en **µg/dL** y se acepta **nmol/L** (÷ 27,59).
+- Reglas extra: piso del ensayo después de las 11:00, control p95 del fabricante, contraste por
+  sexo (dudoso si discrepa), aviso de edad fuera de 20–55, razón tarde/noche (15:30/21:00), basal
+  propio con ≥3 muestras y bandera de cruce con el módulo óseo.
+- Datos: tabla `cortisol_sample`; referencia en `backend/app/data/cortisol_reference.json`.
+- Detalle completo en [docs/cortisol-spec.md](docs/cortisol-spec.md).
+
+La vista se cambia con las pestañas **Densidad ósea** / **Cortisol** del encabezado; el astronauta
+y el idioma son compartidos.
+
 ## API
 
 | Método | Ruta | Descripción |
@@ -174,6 +195,9 @@ diagnóstico clínico.
 | POST | `/api/v1/astronauts/{code}/preview` | evalúa sin guardar (paso 3 del asistente) |
 | POST | `/api/v1/astronauts/{code}/measurements/import` | importa archivo |
 | GET | `/api/v1/astronauts/{code}/monitoring?site=&window=&lang=` | serie evaluada + nivel actual |
+| POST | `/api/v1/astronauts/{code}/cortisol` | registra y evalúa una muestra de cortisol |
+| GET | `/api/v1/astronauts/{code}/cortisol?days=` | serie de cortisol, razón y basal |
+| POST | `/api/v1/astronauts/{code}/cortisol/import` | importa muestras (CSV/XLSX/JSON) |
 
 Todas las respuestas de error usan `{"detail": "...", "code": "..."}` en el idioma solicitado.
 
@@ -216,7 +240,7 @@ El módulo óseo no está cableado a la API:
 
 ## Estado
 
-- 52 tests de backend (dominio, referencia y API) y 4 de frontend en verde.
+- 90 tests de backend (dominio, referencia, cortisol y API) y 4 de frontend en verde.
 - Ruff limpio, TypeScript estricto y build de producción verificado.
 - Base local creada por uvicorn y hot reload comprobado en `bun run dev`.
 

@@ -12,13 +12,7 @@ router = APIRouter(prefix="/astronauts", tags=["astronauts"])
 
 
 def _out(astronaut: Astronaut) -> AstronautOut:
-    return AstronautOut(
-        code=astronaut.code,
-        name=astronaut.name,
-        sex=astronaut.sex,  # type: ignore[arg-type]
-        birth_date=astronaut.birth_date,
-        age=service.age_today(astronaut),
-    )
+    return service.to_out(astronaut)
 
 
 @router.get("", response_model=list[AstronautOut])

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime, time
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -130,6 +130,88 @@ class ReferenceInfoOut(BaseModel):
     t_thresholds: dict[str, float]
 
 
+# --- Modulo cortisol (independiente del oseo) ---
+
+CortisolUnit = Literal["ug_dl", "nmol_l"]
+MissionPhase = Literal["preflight", "inflight", "postflight", "analog"]
+Reading = Literal["normal", "watch", "elevated", "flat"]
+
+
+class CortisolSampleCreate(BaseModel):
+    measured_at: datetime
+    value: float
+    unit: CortisolUnit = "ug_dl"
+    wake_time: time | None = None
+    mission_phase: MissionPhase | None = None
+    notes: str | None = Field(default=None, max_length=500)
+
+
+class CortisolSampleOut(BaseModel):
+    id: int
+    measured_at: datetime
+    value_ug_dl: float
+    value_nmol_l: float
+    hour: float
+    band: str
+    z: float
+    percentile: float
+    color: int
+    expected_median_ug_dl: float
+    expected_median_nmol_l: float
+    direction: Literal["high", "low"]
+    sex_color: int
+    discordant: bool
+    above_manufacturer_p95: bool
+    flags: list[str]
+    wake_time: time | None
+    mission_phase: MissionPhase | None
+    notes: str | None
+
+
+class CortisolRatioOut(BaseModel):
+    date: date
+    ratio: float
+    reading: Reading
+    afternoon_ug_dl: float
+    night_ug_dl: float
+
+
+class CortisolBaselineOut(BaseModel):
+    band: str
+    n: int
+    median_ug_dl: float
+    delta_pct: float | None
+
+
+class CortisolCurvePointOut(BaseModel):
+    hour: float
+    median_ug_dl: float
+    p10_ug_dl: float
+    p90_ug_dl: float
+
+
+class CortisolReferenceOut(BaseModel):
+    method: str
+    source: str
+    sigma_ln: float
+    green_z: float
+    yellow_z: float
+    conversion_nmol_per_ug: float
+    age_range: list[int]
+    curve: list[CortisolCurvePointOut]
+
+
+class CortisolAssessmentOut(BaseModel):
+    astronaut: AstronautOut
+    samples: list[CortisolSampleOut]
+    current: CortisolSampleOut | None
+    ratio: CortisolRatioOut | None
+    personal_baseline: CortisolBaselineOut | None
+    bone_cross_risk: bool
+    warnings: list[str]
+    reference: CortisolReferenceOut
+
+
 class MetaOut(BaseModel):
     app_name: str
     model: ModelInfo
@@ -138,6 +220,7 @@ class MetaOut(BaseModel):
     thresholds: dict[str, float]
     units: dict[str, str]
     reference: ReferenceInfoOut
+    cortisol: CortisolReferenceOut
 
 
 class ErrorBody(BaseModel):

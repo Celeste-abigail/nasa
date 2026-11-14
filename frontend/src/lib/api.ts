@@ -2,6 +2,9 @@ import type {
   Assessment,
   Astronaut,
   AstronautPatch,
+  CortisolAssessment,
+  CortisolSample,
+  CortisolSampleInput,
   ImportReport,
   Measurement,
   MeasurementInput,
@@ -99,6 +102,30 @@ export const api = {
     form.append("file", file);
     return request<ImportReport>(
       `${BASE}/astronauts/${encodeURIComponent(code)}/measurements/import`,
+      { method: "POST", body: form },
+      lang,
+    );
+  },
+
+  cortisol: (code: string, lang: string) =>
+    request<CortisolAssessment>(
+      `${BASE}/astronauts/${encodeURIComponent(code)}/cortisol`,
+      {},
+      lang,
+    ),
+
+  createCortisol: (code: string, input: CortisolSampleInput, lang: string) =>
+    request<CortisolSample>(
+      `${BASE}/astronauts/${encodeURIComponent(code)}/cortisol`,
+      { method: "POST", body: JSON.stringify(input) },
+      lang,
+    ),
+
+  importCortisol: (code: string, file: File, lang: string) => {
+    const form = new FormData();
+    form.append("file", file);
+    return request<ImportReport>(
+      `${BASE}/astronauts/${encodeURIComponent(code)}/cortisol/import`,
       { method: "POST", body: form },
       lang,
     );

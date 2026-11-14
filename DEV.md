@@ -178,3 +178,19 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 ```
 
 Si un shell no reconoce `bun`, abre una terminal nueva o usa `export PATH="$PATH:/c/Users/Windows/.bun/bin"`.
+
+## 12. Módulo de cortisol
+
+- Es independiente del óseo: tabla `cortisol_sample`, dominio `app/domain/cortisol.py`, módulo
+  `app/modules/cortisol/`.
+- La referencia está en `backend/app/data/cortisol_reference.json` (no hay Excel: los valores
+  derivados vienen de `_local/cortisol.md`). Editar ahí exige re-ejecutar los tests.
+- La vista se cambia con las pestañas del encabezado; la preferencia queda en
+  `localStorage["nasa-space-view"]`.
+- Import: `measured_at` (fecha **y hora**), `value`, `unit` (`ug_dl` por defecto), `wake_time`,
+  `mission_phase`, `notes`.
+- El color y el z se recalculan en cada lectura (no se guardan), así que cambiar la referencia
+  corrige el histórico sin migrar datos.
+- El cruce con el óseo es solo un aviso (`bone_cross_risk`); no altera el triage de BUA.
+- Regenerar el seed de demo: `mise run seed` (agrega cortisol si falta) o `... seed --force` para
+  duplicar series de demo.

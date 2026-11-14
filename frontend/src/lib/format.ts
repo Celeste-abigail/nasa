@@ -46,6 +46,16 @@ export function signed(value: number | null | undefined, lang: string, digits = 
   return value > 0 ? `+${text}` : text;
 }
 
+/** Fecha y hora local a partir de un ISO sin zona (lo que envía el backend). */
+export function formatDateTime(iso: string, lang: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return new Intl.DateTimeFormat(lang, {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(date);
+}
+
 export function todayISO(): string {
   return toISODate(new Date());
 }

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { api } from "./lib/api";
 import type { Site } from "./lib/types";
+import { CortisolView } from "./modules/cortisol/CortisolView";
 import { ImportPanel } from "./modules/measurements/ImportPanel";
 import { ProfilePanel } from "./modules/measurements/ProfilePanel";
 import { RegisterPanel } from "./modules/measurements/RegisterPanel";
@@ -21,6 +22,13 @@ export default function App() {
 
   const [astronaut, setAstronaut] = useState("");
   const [site, setSite] = useState<Site>("calcaneus");
+  const [view, setView] = useState<"bone" | "cortisol">(() =>
+    localStorage.getItem("nasa-space-view") === "cortisol" ? "cortisol" : "bone",
+  );
+
+  useEffect(() => {
+    localStorage.setItem("nasa-space-view", view);
+  }, [view]);
 
   const metaQuery = useQuery({
     queryKey: ["meta", lang],
@@ -67,9 +75,19 @@ export default function App() {
         lang={lang}
         onLang={(next) => void i18n.changeLanguage(next)}
         modelVersion={meta?.model.version}
+        view={view}
+        onView={setView}
       />
 
-      {loadError ? (
+      {view === "cortisol" ? (
+        active ? (
+          <CortisolView astronaut={active} lang={lang} onToast={show} />
+        ) : (
+          <section className="panel">
+            <div className="empty">{t("common.loading")}</div>
+          </section>
+        )
+      ) : loadError ? (
         <section className="panel">
           <p className="err">{t("common.error")}</p>
           <button
@@ -172,14 +190,16 @@ export default function App() {
         </div>
       )}
 
-      <footer className="footer">
-        <span>{meta?.model.formula ?? ""}</span>
-        {assessment?.model.references.map((reference) => (
-          <a key={reference} href={reference} target="_blank" rel="noreferrer">
-            {reference.replace("https://doi.org/", "DOI ")}
-          </a>
-        ))}
-      </footer>
+      {view === "bone" && (
+        <footer className="footer">
+          <span>{meta?.model.formula ?? ""}</span>
+          {assessment?.model.references.map((reference) => (
+            <a key={reference} href={reference} target="_blank" rel="noreferrer">
+              {reference.replace("https://doi.org/", "DOI ")}
+            </a>
+          ))}
+        </footer>
+      )}
 
       <div className={`toast ${message ? "show" : ""}`} role="status">
         {message}

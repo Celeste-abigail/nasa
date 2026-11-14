@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 
 from sqlmodel import Session, select
 
-from app.domain.models import Astronaut, Measurement
+from app.domain.models import Astronaut, CortisolSample, Measurement
 
 
 def list_astronauts(session: Session) -> list[Astronaut]:
@@ -78,3 +78,44 @@ def has_measurement_on(session: Session, astronaut_id: int, site: str, day: date
         Measurement.measured_on == day,
     )
     return session.exec(stmt).first() is not None
+
+
+def list_cortisol_samples(
+    session: Session,
+    astronaut_id: int,
+    since: datetime | None = None,
+) -> list[CortisolSample]:
+    stmt = select(CortisolSample).where(CortisolSample.astronaut_id == astronaut_id)
+    if since is not None:
+        stmt = stmt.where(CortisolSample.measured_at >= since)
+    stmt = stmt.order_by(CortisolSample.measured_at, CortisolSample.id)
+    return list(session.exec(stmt).all())
+
+
+def add_cortisol_sample(
+    session: Session,
+    astronaut_id: int,
+    measured_at: datetime,
+    value_ug_dl: float,
+    input_value: float,
+    input_unit: str,
+    wake_time=None,
+    mission_phase: str | None = None,
+    notes: str | None = None,
+    source: str = "manual",
+) -> CortisolSample:
+    sample = CortisolSample(
+        astronaut_id=astronaut_id,
+        measured_at=measured_at,
+        value_ug_dl=value_ug_dl,
+        input_value=input_value,
+        input_unit=input_unit,
+        wake_time=wake_time,
+        mission_phase=mission_phase,
+        notes=notes,
+        source=source,
+    )
+    session.add(sample)
+    session.commit()
+    session.refresh(sample)
+    return sample

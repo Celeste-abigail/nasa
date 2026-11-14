@@ -95,6 +95,7 @@ export interface Meta {
   };
   units: { bua: string; uv: string; att: string };
   reference: ReferenceInfo;
+  cortisol: CortisolReference;
 }
 
 export interface MeasurementInput {
@@ -130,4 +131,85 @@ export interface ImportReport {
   created: number;
   skipped: number;
   errors: ImportRowError[];
+}
+
+// --- Cortisol (modulo independiente) ---
+
+export type CortisolUnit = "ug_dl" | "nmol_l";
+export type MissionPhase = "preflight" | "inflight" | "postflight" | "analog";
+export type CortisolReading = "normal" | "watch" | "elevated" | "flat";
+
+export interface CortisolSample {
+  id: number;
+  measured_at: string;
+  value_ug_dl: number;
+  value_nmol_l: number;
+  hour: number;
+  band: string;
+  z: number;
+  percentile: number;
+  color: 1 | 2 | 3;
+  expected_median_ug_dl: number;
+  expected_median_nmol_l: number;
+  direction: "high" | "low";
+  sex_color: number;
+  discordant: boolean;
+  above_manufacturer_p95: boolean;
+  flags: string[];
+  wake_time: string | null;
+  mission_phase: MissionPhase | null;
+  notes: string | null;
+}
+
+export interface CortisolRatio {
+  date: string;
+  ratio: number;
+  reading: CortisolReading;
+  afternoon_ug_dl: number;
+  night_ug_dl: number;
+}
+
+export interface CortisolBaseline {
+  band: string;
+  n: number;
+  median_ug_dl: number;
+  delta_pct: number | null;
+}
+
+export interface CortisolCurvePoint {
+  hour: number;
+  median_ug_dl: number;
+  p10_ug_dl: number;
+  p90_ug_dl: number;
+}
+
+export interface CortisolReference {
+  method: string;
+  source: string;
+  sigma_ln: number;
+  green_z: number;
+  yellow_z: number;
+  conversion_nmol_per_ug: number;
+  age_range: number[];
+  curve: CortisolCurvePoint[];
+}
+
+export interface CortisolAssessment {
+  astronaut: Astronaut;
+  samples: CortisolSample[];
+  current: CortisolSample | null;
+  ratio: CortisolRatio | null;
+  personal_baseline: CortisolBaseline | null;
+  bone_cross_risk: boolean;
+  warnings: string[];
+  reference: CortisolReference;
+}
+
+export interface CortisolSampleInput {
+  measured_at: string;
+  value: number;
+  unit: CortisolUnit;
+  wake_time?: string | null;
+  mission_phase?: MissionPhase | null;
+  notes?: string | null;
 }
