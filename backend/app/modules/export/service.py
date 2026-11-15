@@ -147,25 +147,27 @@ def _sections(ctx: dict[str, Any]) -> list[dict[str, Any]]:
         }
     )
 
-    current = mental.current
-    status = t(lang, f"export.zone.{current.zone}") if current else t(lang, "export.no_data")
-    tone = current.zone if current else "gray"
+    tlx = mental.current_tlx
+    cda = mental.current_cda
+    sleep = mental.current_sleep
+    pvt = mental.current_pvt
+    status, tone = _state(lang, mental.global_color)
+    rows: list[tuple[str, str]] = []
+    if tlx is not None:
+        rows.append(("NASA-TLX", _fmt(tlx.tlx, 2)))
+    if cda is not None:
+        rows.append(("IAD", _fmt(cda.iad, 1)))
+    if sleep is not None:
+        rows.append(("TST", _fmt(sleep.tst_min / 60.0, 1, " h")))
+    if pvt is not None:
+        rows.append(("PVT", _fmt(pvt.speed, 2)))
     sections.append(
         {
             "title": t(lang, "export.mental"),
             "status": status,
             "color": tone,
-            "rows": (
-                [
-                    ("ALI", _fmt(current.ali, 1)),
-                    ("DMRS", _fmt(current.dmrs, 1)),
-                    (t(lang, "export.metric.wl"), _fmt(current.wl_day, 1)),
-                    (t(lang, "export.metric.ewma"), _fmt(current.ewma_mood, 1)),
-                ]
-                if current
-                else []
-            ),
-            "recommendation": t(lang, f"rec.mental.{current.zone}") if current else "",
+            "rows": rows,
+            "recommendation": t(lang, f"rec.mental.{tone}"),
         }
     )
 
@@ -446,28 +448,29 @@ def data_csv(session: Session, code: str, lang: str) -> str:
                 ["radiation", stamp, "q_factor", reading.q_factor, "ratio", reading.region, ""]
             )
 
-    for day in ctx["mental"].days:
-        stamp = day.day.isoformat()
-        rows.append(["mental", stamp, "wl_day", day.wl_day, "index", day.zone, ""])
-        rows.append(["mental", stamp, "dmrs", day.dmrs, "index", day.zone, ""])
-        rows.append(["mental", stamp, "ali", day.ali, "index", day.zone, ""])
-        rows.append(["mental", stamp, "pa", day.pa, "index", day.zone, ""])
-        rows.append(["mental", stamp, "na", day.na, "index", day.zone, ""])
-        for task in day.tasks:
-            rows.append(
-                [
-                    "mental_task",
-                    stamp,
-                    "overall",
-                    task.overall,
-                    "index",
-                    task.eval_mode,
-                    task.name or task.task_ref or "",
-                ]
-            )
-            rows.append(
-                ["mental_task", stamp, "duration_min", task.duration_min, "min", task.eval_mode, ""]
-            )
+    for point in ctx["mental"].tlx_points:
+        stamp = point.taken_at.isoformat()
+        rows.append(["tlx", stamp, "tlx", point.tlx, "index", point.phase, point.dominant])
+        rows.append(["tlx", stamp, "rtlx", point.rtlx, "index", point.phase, ""])
+    for cda in ctx["mental"].cda_days:
+        stamp = cda.day.isoformat()
+        flags = "|".join(cda.flags)
+        rows.append(["cda", stamp, "iad", cda.iad, "index", cda.phase, flags])
+        rows.append(["cda", stamp, "positive", cda.positive, "index", cda.phase, flags])
+        rows.append(["cda", stamp, "negative", cda.negative, "index", cda.phase, flags])
+        rows.append(["cda", stamp, "stress_fatigue", cda.stress_fatigue, "index", cda.phase, flags])
+    for night in ctx["mental"].sleep_nights:
+        stamp = night.day.isoformat()
+        flags = "|".join(night.flags)
+        rows.append(["sleep", stamp, "tst_min", night.tst_min, "min", flags, ""])
+        rows.append(["sleep", stamp, "efficiency", night.efficiency, "%", flags, ""])
+        rows.append(["sleep", stamp, "debt_hours", night.debt_hours, "h", flags, ""])
+    for test in ctx["mental"].pvt_tests:
+        stamp = test.taken_at.isoformat()
+        note = f"mode={test.mode}s"
+        rows.append(["pvt", stamp, "speed", test.speed, "1/s", "", note])
+        rows.append(["pvt", stamp, "mean_rt_ms", test.mean_rt_ms, "ms", "", note])
+        rows.append(["pvt", stamp, "lapses", test.lapses, "count", "", note])
 
     buffer = io.StringIO()
     writer = csv.writer(buffer, lineterminator="\n")

@@ -91,43 +91,93 @@ class RadiationReading(SQLModel, table=True):
     )
 
 
-class MentalDay(SQLModel, table=True):
-    """Registro diario de salud mental (TLX + DMRS)."""
+class TlxSession(SQLModel, table=True):
+    __tablename__ = "tlx_session"
 
-    __tablename__ = "mental_day"
-    __table_args__ = (UniqueConstraint("astronaut_id", "day", name="uq_mental_day"),)
+    id: int | None = Field(default=None, primary_key=True)
+    astronaut_id: int = Field(foreign_key="astronaut.id", index=True)
+    taken_at: datetime = Field(sa_column=Column(DateTime, index=True, nullable=False))
+    task_description: str = Field(sa_column=Column(String(300), nullable=False))
+    task_category: str = Field(sa_column=Column(String(64), nullable=False))
+    duration_min: int | None = None
+    ratings_json: str = Field(sa_column=Column(Text, nullable=False))
+    comparisons_json: str = Field(sa_column=Column(Text, nullable=False))
+    counts_json: str = Field(sa_column=Column(Text, nullable=False))
+    tlx: float
+    rtlx: float
+    dominant: str = Field(sa_column=Column(String(2), nullable=False))
+
+
+class CdaDay(SQLModel, table=True):
+    __tablename__ = "cda_day"
+    __table_args__ = (UniqueConstraint("astronaut_id", "day", name="uq_cda_day"),)
 
     id: int | None = Field(default=None, primary_key=True)
     astronaut_id: int = Field(foreign_key="astronaut.id", index=True)
     day: date = Field(sa_column=Column(Date, index=True, nullable=False))
-    mission_day: int | None = None
-    m1_sleep: int = 5
-    m2_vigor: int = 5
-    m3_calm: int = 5
-    m4_cohesion: int = 5
-    m5_tension: int = 5
-    m6_irrit: int = 5
-    m7_dysphoria: int = 5
-    m8_somatic: int = 5
-    acute_24h_dose_mgy: float | None = None
-    notes: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
-    source: str = Field(default="manual", sa_column=Column(String(16), nullable=False))
-    created_at: datetime = Field(
-        default_factory=utcnow,
-        sa_column=Column(DateTime, nullable=False),
-    )
+    items_json: str = Field(sa_column=Column(Text, nullable=False))
+    adjusted_json: str = Field(sa_column=Column(Text, nullable=False))
+    iad: float
+    positive: float
+    negative: float
+    stress_fatigue: float
+    sleep: float
+    connection: float
 
 
-class MentalTask(SQLModel, table=True):
-    __tablename__ = "mental_task"
+class SleepProfile(SQLModel, table=True):
+    __tablename__ = "sleep_profile"
+    __table_args__ = (UniqueConstraint("astronaut_id", name="uq_sleep_profile_astronaut"),)
 
     id: int | None = Field(default=None, primary_key=True)
-    day_id: int = Field(foreign_key="mental_day.id", index=True)
-    task_ref: str | None = Field(default=None, sa_column=Column(String(64), nullable=True))
-    category: str | None = Field(default=None, sa_column=Column(String(64), nullable=True))
-    name: str | None = Field(default=None, sa_column=Column(String(200), nullable=True))
-    duration_min: float
-    eval_mode: str = Field(sa_column=Column(String(16), nullable=False))
-    ratings_json: str = Field(sa_column=Column(Text, nullable=False))
-    tallies_json: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
-    overall: float
+    astronaut_id: int = Field(foreign_key="astronaut.id", index=True)
+    need_hours: float = 7.5
+    scheduled_wake: str = Field(default="06:00", sa_column=Column(String(5), nullable=False))
+    window_minutes: int = 450
+    last_adjustment: date | None = Field(default=None, sa_column=Column(Date, nullable=True))
+    blocked: bool = False
+
+
+class SleepNight(SQLModel, table=True):
+    __tablename__ = "sleep_night"
+    __table_args__ = (UniqueConstraint("astronaut_id", "day", name="uq_sleep_night"),)
+
+    id: int | None = Field(default=None, primary_key=True)
+    astronaut_id: int = Field(foreign_key="astronaut.id", index=True)
+    day: date = Field(sa_column=Column(Date, index=True, nullable=False))
+    entry_at: datetime = Field(sa_column=Column(DateTime, nullable=False))
+    latency_min: int
+    awakenings: int
+    waso_min: int
+    cause_group: str | None = Field(default=None, sa_column=Column(String(1), nullable=True))
+    cause_detail: str | None = Field(default=None, sa_column=Column(String(64), nullable=True))
+    final_wake_at: datetime = Field(sa_column=Column(DateTime, nullable=False))
+    exit_at: datetime = Field(sa_column=Column(DateTime, nullable=False))
+    quality: int
+    inertia: int
+    dreams: str = Field(sa_column=Column(String(16), nullable=False))
+    environmental_json: str = Field(sa_column=Column(Text, nullable=False))
+    nap_min: int | None = None
+    tib_min: float
+    tst_min: float
+    efficiency: float
+    midpoint_at: datetime = Field(sa_column=Column(DateTime, nullable=False))
+
+
+class PvtTest(SQLModel, table=True):
+    __tablename__ = "pvt_test"
+
+    id: int | None = Field(default=None, primary_key=True)
+    astronaut_id: int = Field(foreign_key="astronaut.id", index=True)
+    taken_at: datetime = Field(sa_column=Column(DateTime, index=True, nullable=False))
+    mode: int
+    trials_json: str = Field(sa_column=Column(Text, nullable=False))
+    input_false_starts: int = 0
+    valid_count: int
+    lapses: int
+    false_starts: int
+    mean_rt_ms: float
+    speed: float
+    subjective_alertness: int | None = None
+    z: float | None = None
+    color: int | None = None

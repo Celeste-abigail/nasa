@@ -209,13 +209,13 @@ Si un shell no reconoce `bun`, abre una terminal nueva o usa `export PATH="$PATH
 
 ## 14. Módulo de salud mental
 
-- Dominio: `backend/app/domain/mental.py` (TLX, DMRS, EWMA, ALI, zonas).
-- Tablas `mental_day` (única por astronauta y fecha) y `mental_task`.
-- `PUT /mental/{date}` es idempotente: reemplaza las tareas de ese día y recalcula la serie.
-- La dosis aguda de la zona roja es un campo manual opcional; no consulta el módulo de radiación.
-- Los umbrales viven en `mental.THRESHOLDS`; cambiarlos recalcula todo el histórico al leer.
-- `seed` carga 5 días de ejemplo para AST-01 y 2 para AST-02.
-
+- Dominio: `app/domain/mental.py` (TLX, CDA, sueño/SRI, PVT, EWMA y R1–R10).
+- Tablas: `tlx_session`, `cda_day`, `sleep_profile`, `sleep_night`, `pvt_test`; la migración
+  elimina las antiguas `mental_day`/`mental_task`.
+- Endpoints: `/mental`, `/mental/tlx`, `/mental/cda/{date}`, `/mental/sleep/profile`,
+  `/mental/sleep/{date}` y `/mental/pvt`.
+- La UI tiene dos pestañas internas: **Cuestionarios** y **Seguimiento**.
+- `seed` carga 6 TLX, 14 CDA, 7 noches y 6 PVT para AST-01 (serie menor para AST-02).
 ## 15. Pantalla de Resumen
 
 - `frontend/src/modules/overview/`: `OverviewView` (composición), `SummaryCard` (tarjeta y

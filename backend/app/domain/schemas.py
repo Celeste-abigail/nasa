@@ -304,78 +304,176 @@ class RadiationAssessmentOut(BaseModel):
     warnings: list[str]
 
 
-# --- Modulo de salud mental (NASA-TLX + DMRS + ALI) ---
-
-TlxMode = Literal["WEIGHTED_FULL", "RAW_FAST"]
+# --- Modulo de salud mental (TLX + CDA + sueno + PVT) ---
 
 
-class TlxTaskIn(BaseModel):
-    task_ref: str | None = Field(default=None, max_length=64)
-    category: str | None = Field(default=None, max_length=64)
-    name: str | None = Field(default=None, max_length=200)
-    duration_min: float = Field(gt=0, le=1440)
-    eval_mode: TlxMode = "RAW_FAST"
+class TlxComparisonIn(BaseModel):
+    pair: list[str]
+    choice: str
+
+
+class TlxSessionCreate(BaseModel):
+    taken_at: datetime | None = None
+    task_description: str = Field(min_length=3, max_length=300)
+    task_category: str = Field(min_length=1, max_length=64)
+    duration_min: int | None = Field(default=None, ge=1, le=1440)
     ratings: dict[str, int]
-    tallies: dict[str, int] | None = None
+    comparisons: list[TlxComparisonIn]
 
 
-class MoodIn(BaseModel):
-    m1_sleep: int = Field(ge=0, le=10)
-    m2_vigor: int = Field(ge=0, le=10)
-    m3_calm: int = Field(ge=0, le=10)
-    m4_cohesion: int = Field(ge=0, le=10)
-    m5_tension: int = Field(ge=0, le=10)
-    m6_irrit: int = Field(ge=0, le=10)
-    m7_dysphoria: int = Field(ge=0, le=10)
-    m8_somatic: int = Field(ge=0, le=10)
-
-
-class MentalDayIn(BaseModel):
-    mission_day: int | None = Field(default=None, ge=0, le=2000)
-    mood: MoodIn
-    tasks: list[TlxTaskIn] = Field(default_factory=list)
-    acute_24h_dose_mgy: float | None = Field(default=None, ge=0, le=5000)
-    notes: str | None = Field(default=None, max_length=500)
-
-
-class TlxTaskOut(BaseModel):
+class TlxSessionOut(BaseModel):
     id: int
-    task_ref: str | None
-    category: str | None
-    name: str | None
-    duration_min: float
-    eval_mode: TlxMode
+    taken_at: datetime
+    task_description: str
+    task_category: str
+    duration_min: int | None
     ratings: dict[str, int]
+    counts: dict[str, int]
     weights: dict[str, float]
-    overall: float
+    contributions: dict[str, float]
+    tlx: float
+    rtlx: float
+    dominant: str
 
 
-class MentalDayOut(BaseModel):
-    day: date
-    mission_day: int | None
-    wl_day: float
-    dmrs: float
-    pa: float
-    na: float
-    z_wl: float
-    z_dmrs: float
-    ewma_wl: float
-    ewma_mood: float
-    ali: float
-    sleep_debt: bool
-    burnout: bool
-    acute_radiation: bool
-    zone: str
+class TlxPointOut(BaseModel):
+    index: int
+    taken_at: datetime
+    tlx: float
+    rtlx: float
+    dominant: str
     color: int
-    reasons: list[str]
-    mood: MoodIn
-    tasks: list[TlxTaskOut]
+    phase: str
+    z: float | None
+    ewma: float | None
+    se: float | None
+    limit_warn: float | None
+    limit_action: float | None
+    underload: bool
+
+
+class CdaInput(BaseModel):
+    items: dict[str, int]
+
+
+class CdaPointOut(BaseModel):
+    day: date
+    iad: float
+    positive: float
+    negative: float
+    stress_fatigue: float
+    sleep: float
+    connection: float
+    color: int
+    phase: str
+    mm7: float | None
+    z: float | None
+    flags: list[str]
+
+
+class SleepProfileIn(BaseModel):
+    need_hours: float = Field(default=7.5, ge=4, le=12)
+    scheduled_wake: str = Field(default="06:00", pattern=r"^\d{2}:\d{2}$")
+    window_minutes: int = Field(default=450, ge=240, le=720)
+    blocked: bool = False
+
+
+class SleepProfileOut(BaseModel):
+    need_hours: float
+    scheduled_wake: str
+    window_minutes: int
+    last_adjustment: date | None
+    blocked: bool
+
+
+class SleepNightIn(BaseModel):
+    day: date
+    entry_at: datetime
+    latency_min: int = Field(ge=0, le=240)
+    awakenings: int = Field(ge=0, le=20)
+    waso_min: int = Field(ge=0, le=600)
+    cause_group: Literal["A", "B"] | None = None
+    cause_detail: str | None = Field(default=None, max_length=64)
+    final_wake_at: datetime
+    exit_at: datetime
+    quality: int = Field(ge=0, le=10)
+    inertia: int = Field(ge=0, le=10)
+    dreams: Literal["none", "neutral", "vivid", "nightmare"] = "none"
+    environmental: list[str] = Field(default_factory=list)
+    nap_min: int | None = Field(default=None, ge=0, le=600)
+
+
+class SleepNightOut(BaseModel):
+    day: date
+    entry_at: datetime
+    final_wake_at: datetime
+    exit_at: datetime
+    latency_min: int
+    awakenings: int
+    waso_min: int
+    cause_group: str | None
+    cause_detail: str | None
+    quality: int
+    inertia: int
+    dreams: str
+    environmental: list[str]
+    nap_min: int | None
+    tib_min: float
+    tst_min: float
+    efficiency: float
+    midpoint_at: datetime
+    color: int
+    flags: list[str]
+    debt_hours: float
+    se7: float | None
+    midpoint_shift_min: float | None
+    excluded: bool
+
+
+class PvtInput(BaseModel):
+    taken_at: datetime | None = None
+    mode: Literal[60, 180] = 60
+    trials: list[int]
+    false_starts: int = Field(default=0, ge=0, le=1000)
+    subjective_alertness: int | None = Field(default=None, ge=0, le=10)
+
+
+class PvtOut(BaseModel):
+    id: int
+    taken_at: datetime
+    mode: int
+    valid_count: int
+    lapses: int
+    false_starts: int
+    mean_rt_ms: float
+    speed: float
+    subjective_alertness: int | None
+    z: float | None
+    color: int | None
+    discrepancy: bool
+
+
+class PrescriptionOut(BaseModel):
+    id: str
+    severity: int
 
 
 class MentalAssessmentOut(BaseModel):
     astronaut: AstronautOut
-    days: list[MentalDayOut]
-    current: MentalDayOut | None
+    tlx_points: list[TlxPointOut]
+    cda_days: list[CdaPointOut]
+    sleep_nights: list[SleepNightOut]
+    pvt_tests: list[PvtOut]
+    current_tlx: TlxSessionOut | None
+    current_cda: CdaPointOut | None
+    current_sleep: SleepNightOut | None
+    current_pvt: PvtOut | None
+    global_color: int | None
+    prescriptions: list[PrescriptionOut]
+    sleep_profile: SleepProfileOut
+    window_suggestion: int
+    adherence: dict[str, int]
+    privacy: dict[str, bool]
     thresholds: dict[str, float]
     warnings: list[str]
 

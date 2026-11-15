@@ -5,6 +5,7 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
+from app.domain import mental
 from app.main import app
 
 API = "/api/v1"
@@ -42,27 +43,57 @@ def seeded_astronaut(client: TestClient) -> None:
         f"{API}/astronauts/EXP-1/cortisol",
         json={"measured_at": "2026-10-01T07:00:00", "value": 0.5, "unit": "ug_dl"},
     )
-    client.put(
-        f"{API}/astronauts/EXP-1/mental/2026-10-01",
+    client.post(
+        f"{API}/astronauts/EXP-1/mental/tlx",
         json={
-            "mission_day": 10,
-            "mood": {
-                "m1_sleep": 8,
-                "m2_vigor": 8,
-                "m3_calm": 8,
-                "m4_cohesion": 8,
-                "m5_tension": 2,
-                "m6_irrit": 2,
-                "m7_dysphoria": 2,
-                "m8_somatic": 2,
-            },
-            "tasks": [
+            "taken_at": "2026-10-01T18:00:00",
+            "task_description": "Tarea de exportación",
+            "task_category": "EVA",
+            "ratings": {"MD": 50, "PD": 50, "TD": 50, "OP": 50, "EF": 50, "FR": 50},
+            "comparisons": [
                 {
-                    "duration_min": 60,
-                    "eval_mode": "RAW_FAST",
-                    "ratings": {"MD": 50, "PD": 50, "TD": 50, "OP": 50, "EF": 50, "FR": 50},
+                    "pair": list(pair),
+                    "choice": choice,
                 }
+                for pair, choice in zip(
+                    mental.PAIRS,
+                    [
+                        "MD",
+                        "MD",
+                        "OP",
+                        "EF",
+                        "MD",
+                        "PD",
+                        "OP",
+                        "PD",
+                        "PD",
+                        "OP",
+                        "EF",
+                        "FR",
+                        "OP",
+                        "FR",
+                        "EF",
+                    ],
+                    strict=True,
+                )
             ],
+        },
+    )
+    client.put(
+        f"{API}/astronauts/EXP-1/mental/cda/2026-10-01",
+        json={
+            "items": {
+                "animo": 7,
+                "energia": 6,
+                "motivacion": 7,
+                "tension": 3,
+                "tristeza": 2,
+                "irritabilidad": 4,
+                "estres": 5,
+                "fatiga_mental": 6,
+                "sueno": 5,
+                "conexion": 8,
+            }
         },
     )
 
@@ -106,7 +137,8 @@ def test_data_json(client: TestClient) -> None:
     assert payload["astronaut"]["code"] == "EXP-1"
     assert payload["bone"]["current"]["bua"] == pytest.approx(118.0)
     assert payload["cortisol"]["current"]["value_ug_dl"] == pytest.approx(0.5)
-    assert len(payload["mental"]["days"]) == 1
+    assert len(payload["mental"]["cda_days"]) == 1
+    assert payload["mental"]["current_tlx"]["tlx"] == pytest.approx(50.0)
 
 
 def test_data_csv(client: TestClient) -> None:
@@ -118,7 +150,8 @@ def test_data_csv(client: TestClient) -> None:
     assert lines[0] == "module,recorded_at,metric,value,unit,flags,notes"
     assert any(line.startswith("bone,2026-10-01,bua,118.0") for line in lines)
     assert any(line.startswith("cortisol,2026-10-01T07:00:00,value") for line in lines)
-    assert any(line.startswith("mental,2026-10-01,ali") for line in lines)
+    assert any(line.startswith("tlx,2026-10-01") for line in lines)
+    assert any(line.startswith("cda,2026-10-01,iad") for line in lines)
 
     parsed = list(__import__("csv").DictReader(text.splitlines()))
     assert json.dumps(parsed[0])  # el CSV es parseable

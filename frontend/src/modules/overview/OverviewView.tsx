@@ -6,7 +6,6 @@ import {
   attentionCount,
   boneSeverity,
   cortisolSeverity,
-  mentalSeverity,
   radiationSeverity,
   worst,
   type ModuleKey,
@@ -208,7 +207,7 @@ export function OverviewView({ astronaut, lang, onOpen }: Props) {
   const bSev = boneSeverity(boneData?.current?.level);
   const cSev = cortisolSeverity(cortisolData?.current?.color);
   const rSev = radiationSeverity(radiationData?.color);
-  const mSev = mentalSeverity(mentalData?.current?.zone);
+  const mSev = Math.min(4, mentalData?.global_color ?? 0) as 0 | 1 | 2 | 3 | 4;
 
   const severities = [bSev, cSev, rSev, mSev];
   const worstSeverity = worst(severities);
@@ -373,8 +372,8 @@ export function OverviewView({ astronaut, lang, onOpen }: Props) {
               <div>
                 <small>CARGA MENTAL</small>
                 <strong>
-                  {mentalData?.current
-                    ? `ALI ${fmt(mentalData.current.ali, lang, 1)}`
+                  {mentalData?.current_tlx
+                    ? `TLX ${fmt(mentalData.current_tlx.tlx, lang, 1)}`
                     : "—"}
                 </strong>
                 <span>pts</span>
@@ -664,45 +663,45 @@ export function OverviewView({ astronaut, lang, onOpen }: Props) {
               severity={mSev}
               badge={standardBadge(mSev, lang)}
               primary={
-                mentalData?.current
-                  ? `ALI ${fmt(mentalData.current.ali, lang, 1)}`
+                mentalData?.current_tlx
+                  ? fmt(mentalData.current_tlx.tlx, lang, 1)
                   : "—"
               }
+              unit="TLX"
               metrics={[
                 {
-                  label: t("overview.metric.dmrs"),
-                  value: mentalData?.current
-                    ? fmt(mentalData.current.dmrs, lang, 1)
+                  label: t("overview.metric.iad"),
+                  value: mentalData?.current_cda
+                    ? fmt(mentalData.current_cda.iad, lang, 1)
                     : "—",
                 },
                 {
-                  label: t("overview.metric.wl"),
-                  value: mentalData?.current
-                    ? fmt(mentalData.current.wl_day, lang, 1)
+                  label: t("overview.metric.tst"),
+                  value: mentalData?.current_sleep
+                    ? `${fmt(mentalData.current_sleep.tst_min / 60, lang, 1)} h`
                     : "—",
                 },
                 {
-                  label: t("overview.metric.ewma"),
-                  value: mentalData?.current
-                    ? fmt(mentalData.current.ewma_mood, lang, 1)
+                  label: t("overview.metric.pvt"),
+                  value: mentalData?.current_pvt
+                    ? fmt(mentalData.current_pvt.speed, lang, 2)
                     : "—",
                 },
                 {
-                  label: t("overview.metric.reasons"),
-                  value: mentalData?.current
-                    ? mentalData.current.reasons
-                        .slice(0, 2)
-                        .map((reason) => t(`mental.reason.${reason}`))
-                        .join(" · ")
-                    : "—",
+                  label: t("overview.metric.prescriptions"),
+                  value: String(mentalData?.prescriptions.length ?? 0),
                 },
               ]}
-              updated={mentalData?.current?.day ?? null}
-              spark={mentalData?.days.map((day) => day.ali)}
+              updated={
+                mentalData?.current_tlx
+                  ? formatDateTime(mentalData.current_tlx.taken_at, lang)
+                  : null
+              }
+              spark={mentalData?.tlx_points.map((point) => point.tlx)}
               onOpen={() => onOpen("mental")}
               loading={mental.isLoading}
               error={mental.isError}
-              empty={!mentalData?.current}
+              empty={!mentalData?.current_tlx}
             />
           )}
         </div>

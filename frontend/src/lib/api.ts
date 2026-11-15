@@ -2,6 +2,7 @@ import type {
   Assessment,
   Astronaut,
   AstronautPatch,
+  CdaPoint,
   CortisolAssessment,
   CortisolSample,
   CortisolSampleInput,
@@ -9,13 +10,19 @@ import type {
   Measurement,
   MeasurementInput,
   MentalAssessment,
-  MentalDayInput,
   Meta,
   Point,
+  PvtInput,
+  PvtTest,
   RadiationAssessment,
   RadiationReading,
   RadiationReadingInput,
   Site,
+  SleepNight,
+  SleepNightInput,
+  SleepProfile,
+  TlxSession,
+  TlxSessionInput,
 } from "./types";
 
 const BASE = "/api/v1";
@@ -184,10 +191,38 @@ export const api = {
       lang,
     ),
 
-  saveMental: (code: string, day: string, input: MentalDayInput, lang: string) =>
-    request<MentalAssessment>(
-      `${BASE}/astronauts/${encodeURIComponent(code)}/mental/${day}`,
+  createTlx: (code: string, input: TlxSessionInput, lang: string) =>
+    request<TlxSession>(
+      `${BASE}/astronauts/${encodeURIComponent(code)}/mental/tlx`,
+      { method: "POST", body: JSON.stringify(input) },
+      lang,
+    ),
+
+  saveCda: (code: string, day: string, items: Record<string, number>, lang: string) =>
+    request<CdaPoint>(
+      `${BASE}/astronauts/${encodeURIComponent(code)}/mental/cda/${day}`,
+      { method: "PUT", body: JSON.stringify({ items }) },
+      lang,
+    ),
+
+  saveSleepProfile: (code: string, input: SleepProfile, lang: string) =>
+    request<SleepProfile>(
+      `${BASE}/astronauts/${encodeURIComponent(code)}/mental/sleep/profile`,
       { method: "PUT", body: JSON.stringify(input) },
+      lang,
+    ),
+
+  saveSleepNight: (code: string, day: string, input: SleepNightInput, lang: string) =>
+    request<SleepNight>(
+      `${BASE}/astronauts/${encodeURIComponent(code)}/mental/sleep/${day}`,
+      { method: "PUT", body: JSON.stringify(input) },
+      lang,
+    ),
+
+  createPvt: (code: string, input: PvtInput, lang: string) =>
+    request<PvtTest>(
+      `${BASE}/astronauts/${encodeURIComponent(code)}/mental/pvt`,
+      { method: "POST", body: JSON.stringify(input) },
       lang,
     ),
 };

@@ -1,73 +1,77 @@
 # Especificación · Módulo de salud mental
 
-Derivado de `_local/mental.md`, limitado a la parte psicométrica (NASA-TLX + DMRS + ALI). El
-subsistema de dosimetría TLD/CR-39 de ese documento **no** se implementa: la radiación tiene su
-propio módulo con datos TEPC. Sección independiente, sin lecturas ni escrituras en otras tablas.
+Derivado de `_local/salud_mental.md` (v1.1). Reemplaza el modelo anterior de diario M1–M8 + ALI. Se
+compone de cuatro instrumentos interactivos, sin sensores, y un motor de seguimiento con semáforos
+y prescripciones R1–R10.
 
-## Entradas
+## NASA-TLX posmisión
 
-**NASA-TLX por tarea** (K tareas por día):
+- Registro de tarea: descripción (3–300), categoría (8 opciones) y duración opcional.
+- Seis escalas 0–100 en pasos de 5, sin valor por defecto:
+  `MD`, `PD`, `TD`, `OP`, `EF`, `FR`.
+- **15 comparaciones** de pares, en orden aleatorio distinto en cada sesión (modo `siempre`).
+- `c_i` = veces elegida (0–5, suma 15); `w_i = c_i/15`.
+- `TLX = Σ(v_i·c_i)/15`; `RTLX = Σv_i/6`; contribución `k_i = v_i·c_i/15`; dimensión dominante.
+- Semáforo:
+  - sesiones 1–5: verde ≤ 49.93, amarillo ≤ 68.00, rojo > 68.00 (Grier 2015).
+  - desde la 6: `μ`/`σ≥5` de las 5 primeras, `z=(x−μ)/σ`, EWMA λ=0.3,
+    `SE_t = σ√(λ/(2−λ)·[1−(1−λ)^{2t}])`, límites `μ+2SE`/`μ+3SE`; el peor de `z`, EWMA y TLX>68.
+  - Aviso de subcarga si `TLX < 26.08`.
 
-- 6 dimensiones 0–100 en pasos de 5: `MD`, `PD`, `TD`, `OP` (invertida), `EF`, `FR`.
-- `WEIGHTED_FULL`: contadores `T_i` enteros 0–5 con suma exacta **15** → `W_i = T_i/15`.
-- `RAW_FAST`: `W_i = 1/6`.
-- `Overall = Σ R_i·W_i`.
-- `WL_day = Σ(Overall_k·D_k) / Σ D_k` (ponderada por duración en minutos).
+## Chequeo Diario de Ánimo (CDA)
 
-**DMRS diario** (8 ítems 0–10):
+- 10 ítems 0–10: 5 positivos (`animo`, `energia`, `motivacion`, `sueno`, `conexion`) y 5 negativos
+  (`tension`, `tristeza`, `irritabilidad`, `estres`, `fatiga_mental`).
+- `a_j` = valor o `10−valor`; `IAD = 10·media(a_j)`.
+- Subíndices: afecto positivo, afecto negativo, estrés/fatiga, sueño y conexión.
+- Provisional (<14 respuestas): verde ≥60, amarillo 40–60, rojo <40. Con línea base de 14 días:
+  `MM7 ≤ μ−σ` o `z≤−2` o `IAD<40` o 3 días sin respuesta → amarillo; `MM7 ≤ μ−2σ`, `z≤−2` tres
+  días seguidos o 7 días en amarillo → rojo.
 
-```
-PA  = (M1+M2+M3+M4)/40 · 100
-NA  = (M5+M6+M7+M8)/40 · 100
-DMRS = 10 · [0,15·M1 + 0,15·M2 + 0,10·M3 + 0,10·M4
-           + 0,15·(10−M5) + 0,10·(10−M6) + 0,15·(10−M7) + 0,10·(10−M8)]
-```
+## Sueño personalizado
 
-## Curva longitudinal
+- Perfil: horas necesarias, hora de despertar (UTC), ventana (min) y bloqueo.
+- Registro matutino: entrada/salida del saco, latencia, despertares, WASO, causa A/B y subcausa,
+  despertar final, calidad, inercia, sueños, descarte ambiental y siesta.
+- `TIB = salida−entrada`; `TST = (despertar−entrada)−latencia−WASO`; `SE = 100·TST/TIB`;
+  punto medio del sueño. SRI con ≥5 noches.
+- Semáforos: TST (<5 h rojo, 5–6 h amarillo), tendencia de 3 noches, deuda de 7 días (≥7/≥14 h),
+  `SE7<85 %`, desfase del punto medio ≥2 h. Noche con inercia ≥7 y descarte ambiental se excluye
+  de la ventana.
+- Ventana semanal: `SE7<85 %` → −15 min (piso 360), `>90 %` → +15 min (techo necesidad+30).
 
-```
-EWMA_WL(t)   = 0,35·WL_day + 0,65·EWMA_WL(t−1)
-EWMA_Mood(t) = 0,35·DMRS   + 0,65·EWMA_Mood(t−1)
-Z_DMRS(t)    = (DMRS − μ_7d) / max(σ_7d, 5)
-ALI(t)       = 0,55·EWMA_WL + 0,45·(100 − EWMA_Mood)
-               +8 si M1 ≤ 3 dos días consecutivos (tope 100)
-```
+## PVT-B interactivo
 
-Con menos de 3 días previos se usan `μ_WL = 50`, `μ_DMRS = 75`, `σ = 5`.
+- 60 s (rápido) o 180 s (validado); estímulo visual a intervalos aleatorios de 1–4 s; respuesta con
+  clic o barra espaciadora.
+- Válidos: RT ≥100 ms; lapso ≥355 ms; falsos inicios: respuesta antes del estímulo o RT <100 ms.
+- `v = media(1000/TR)`; TR medio. Semáforo por `z_v` frente a la línea base (≥5 pruebas):
+  `>−1` verde, `−2<z≤−1` amarillo, `≤−2` rojo; `σ` mínimo 0.209.
+- Discrepancia si alerta subjetiva ≥7 y `z≤−1`.
 
-## Zonas (orden jerárquico)
+## Prescripciones R1–R10
 
-| Zona | Condición | Protocolo |
-|---|---|---|
-| 🔴 Roja (4) | `ALI ≥ 65` ∨ `DMRS < 45` ∨ (`WL < 45` ∧ `DMRS < 50`) ∨ dosis aguda ≥ 500 mGy | Alerta al cirujano de vuelo; restringir EVA/robótica |
-| 🟠 Naranja (3) | `45 ≤ ALI < 65` ∨ `45 ≤ DMRS < 65` ∨ `Z_DMRS ≤ −1,5` | Bloquear tareas de alta demanda temporal |
-| 🟡 Amarilla (2) | `EWMA_WL ≥ 65` ∧ `DMRS ≥ 60` | Descanso de 45 min post-tarea |
-| 🟢 Verde (1) | resto | Operación nominal |
-
-La dosis aguda es un campo **opcional y manual** del registro diario; si está vacío, la regla de
-radiación se ignora y el módulo sigue siendo independiente.
-
-## Verificación numérica
-
-Con el ejemplo del documento (ratings 75/65/65/75/70/65 y tallies 3/3/0/4/3/2) el TLX da
-**70,6667**. Con el ánimo 6/5/6/8/4/3/2/4: PA 62,5 · NA 32,5 · **DMRS 64,5**. El JSON de ejemplo del
-documento indica 65,5, pero la fórmula y su propio código de referencia dan 64,5; se implementa la
-fórmula.
+R1 eficiencia baja, R2 mente activa, R3 entorno, R4 inercia, R5 pesadillas, R6 alerta reducida,
+R7 deuda de sueño, R8 desfase circadiano, R9 CO₂/ambiente, R10 discrepancia subjetiva. Cada una con
+cápsula y acción concreta; se muestran en la pestaña Seguimiento.
 
 ## Persistencia y API
 
-- `mental_day`: fecha única por astronauta, día de misión, M1…M8, dosis aguda, notas.
-- `mental_task`: por día, duración, modo, ratings/tallies (JSON validado) y `overall`.
-- Los derivados (DMRS, WL, EWMA, Z, ALI, zona) se recalculan al leer.
+Tablas: `tlx_session`, `cda_day`, `sleep_profile`, `sleep_night`, `pvt_test`. Las tablas antiguas
+(`mental_day`, `mental_task`) se eliminan en la migración.
 
 ```
-GET /api/v1/astronauts/{code}/mental?days=
-PUT /api/v1/astronauts/{code}/mental/{date}     (idempotente: reemplaza las tareas del día)
+GET  /api/v1/astronauts/{code}/mental
+POST /api/v1/astronauts/{code}/mental/tlx
+PUT  /api/v1/astronauts/{code}/mental/cda/{date}
+GET/PUT /api/v1/astronauts/{code}/mental/sleep/profile
+PUT  /api/v1/astronauts/{code}/mental/sleep/{date}
+POST /api/v1/astronauts/{code}/mental/pvt
 ```
+
+Todo en UTC. El color y las curvas se recalculan al leer.
 
 ## Límites
 
-- Herramienta de tamizaje; no sustituye la evaluación del médico de vuelo.
-- Los pesos DMRS y los umbrales 45/65 provienen del documento y son configurables en
-  `domain/mental.py`.
-- La Z usa una ventana de 7 días previos; series cortas usan los valores por defecto.
+Herramienta de autorregulación y tamizaje; no es diagnóstico. El sueño es autoinformado (sin EEG) y
+el modo PVT de 60 s no está validado clínicamente. Las alertas rojas no se comparten solas.

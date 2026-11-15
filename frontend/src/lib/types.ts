@@ -306,78 +306,168 @@ export interface RadiationReadingInput {
   notes?: string | null;
 }
 
-// --- Salud mental (NASA-TLX + DMRS + ALI) ---
+// --- Salud mental (TLX + CDA + sueno + PVT) ---
 
-export type TlxMode = "WEIGHTED_FULL" | "RAW_FAST";
-export type MentalZone = "green" | "yellow" | "orange" | "red";
+export type MentalColor = 1 | 2 | 3;
+export type Dreams = "none" | "neutral" | "vivid" | "nightmare";
+export type CauseGroup = "A" | "B";
 
-export interface Mood {
-  m1_sleep: number;
-  m2_vigor: number;
-  m3_calm: number;
-  m4_cohesion: number;
-  m5_tension: number;
-  m6_irrit: number;
-  m7_dysphoria: number;
-  m8_somatic: number;
+export interface TlxComparison {
+  pair: string[];
+  choice: string;
 }
 
-export interface TlxTaskInput {
-  task_ref?: string | null;
-  category?: string | null;
-  name?: string | null;
-  duration_min: number;
-  eval_mode: TlxMode;
+export interface TlxSessionInput {
+  taken_at?: string | null;
+  task_description: string;
+  task_category: string;
+  duration_min?: number | null;
   ratings: Record<string, number>;
-  tallies?: Record<string, number> | null;
+  comparisons: TlxComparison[];
 }
 
-export interface TlxTask {
+export interface TlxSession {
   id: number;
-  task_ref: string | null;
-  category: string | null;
-  name: string | null;
-  duration_min: number;
-  eval_mode: TlxMode;
+  taken_at: string;
+  task_description: string;
+  task_category: string;
+  duration_min: number | null;
   ratings: Record<string, number>;
+  counts: Record<string, number>;
   weights: Record<string, number>;
-  overall: number;
+  contributions: Record<string, number>;
+  tlx: number;
+  rtlx: number;
+  dominant: string;
 }
 
-export interface MentalDay {
-  day: string;
-  mission_day: number | null;
-  wl_day: number;
-  dmrs: number;
-  pa: number;
-  na: number;
-  z_wl: number;
-  z_dmrs: number;
-  ewma_wl: number;
-  ewma_mood: number;
-  ali: number;
-  sleep_debt: boolean;
-  burnout: boolean;
-  acute_radiation: boolean;
-  zone: MentalZone;
+export interface TlxPoint {
+  index: number;
+  taken_at: string;
+  tlx: number;
+  rtlx: number;
+  dominant: string;
   color: number;
-  reasons: string[];
-  mood: Mood;
-  tasks: TlxTask[];
+  phase: string;
+  z: number | null;
+  ewma: number | null;
+  se: number | null;
+  limit_warn: number | null;
+  limit_action: number | null;
+  underload: boolean;
+}
+
+export interface CdaPoint {
+  day: string;
+  iad: number;
+  positive: number;
+  negative: number;
+  stress_fatigue: number;
+  sleep: number;
+  connection: number;
+  color: number;
+  phase: string;
+  mm7: number | null;
+  z: number | null;
+  flags: string[];
+}
+
+export interface SleepProfile {
+  need_hours: number;
+  scheduled_wake: string;
+  window_minutes: number;
+  last_adjustment: string | null;
+  blocked: boolean;
+}
+
+export interface SleepNightInput {
+  day: string;
+  entry_at: string;
+  latency_min: number;
+  awakenings: number;
+  waso_min: number;
+  cause_group?: CauseGroup | null;
+  cause_detail?: string | null;
+  final_wake_at: string;
+  exit_at: string;
+  quality: number;
+  inertia: number;
+  dreams: Dreams;
+  environmental: string[];
+  nap_min?: number | null;
+}
+
+export interface SleepNight {
+  day: string;
+  entry_at: string;
+  final_wake_at: string;
+  exit_at: string;
+  latency_min: number;
+  awakenings: number;
+  waso_min: number;
+  cause_group: string | null;
+  cause_detail: string | null;
+  quality: number;
+  inertia: number;
+  dreams: string;
+  environmental: string[];
+  nap_min: number | null;
+  tib_min: number;
+  tst_min: number;
+  efficiency: number;
+  midpoint_at: string;
+  color: number;
+  flags: string[];
+  debt_hours: number;
+  se7: number | null;
+  midpoint_shift_min: number | null;
+  excluded: boolean;
+}
+
+export interface PvtInput {
+  taken_at?: string | null;
+  mode: 60 | 180;
+  trials: number[];
+  false_starts: number;
+  subjective_alertness?: number | null;
+}
+
+export interface PvtTest {
+  id: number;
+  taken_at: string;
+  mode: number;
+  valid_count: number;
+  lapses: number;
+  false_starts: number;
+  mean_rt_ms: number;
+  speed: number;
+  subjective_alertness: number | null;
+  z: number | null;
+  color: number | null;
+  discrepancy: boolean;
+}
+
+export interface Prescription {
+  id: string;
+  severity: number;
 }
 
 export interface MentalAssessment {
   astronaut: Astronaut;
-  days: MentalDay[];
-  current: MentalDay | null;
+  tlx_points: TlxPoint[];
+  cda_days: CdaPoint[];
+  sleep_nights: SleepNight[];
+  pvt_tests: PvtTest[];
+  current_tlx: TlxSession | null;
+  current_cda: CdaPoint | null;
+  current_sleep: SleepNight | null;
+  current_pvt: PvtTest | null;
+  global_color: number | null;
+  prescriptions: Prescription[];
+  sleep_profile: SleepProfile;
+  window_suggestion: number;
+  adherence: Record<string, number>;
+  privacy: Record<string, boolean>;
   thresholds: Record<string, number>;
   warnings: string[];
-}
-
-export interface MentalDayInput {
-  mission_day?: number | null;
-  mood: Mood;
-  tasks: TlxTaskInput[];
-  acute_24h_dose_mgy?: number | null;
-  notes?: string | null;
 }

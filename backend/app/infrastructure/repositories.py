@@ -8,11 +8,14 @@ from sqlmodel import Session, select
 
 from app.domain.models import (
     Astronaut,
+    CdaDay,
     CortisolSample,
     Measurement,
-    MentalDay,
-    MentalTask,
+    PvtTest,
     RadiationReading,
+    SleepNight,
+    SleepProfile,
+    TlxSession,
     utcnow,
 )
 
@@ -187,22 +190,79 @@ def add_radiation_reading(
     return reading
 
 
-def get_mental_day(session: Session, astronaut_id: int, day: date) -> MentalDay | None:
-    stmt = select(MentalDay).where(MentalDay.astronaut_id == astronaut_id, MentalDay.day == day)
+def list_tlx_sessions(session: Session, astronaut_id: int) -> list[TlxSession]:
+    stmt = (
+        select(TlxSession)
+        .where(TlxSession.astronaut_id == astronaut_id)
+        .order_by(TlxSession.taken_at, TlxSession.id)
+    )
+    return list(session.exec(stmt).all())
+
+
+def add_tlx_session(
+    session: Session,
+    astronaut_id: int,
+    taken_at: datetime,
+    task_description: str,
+    task_category: str,
+    duration_min: int | None,
+    ratings_json: str,
+    comparisons_json: str,
+    counts_json: str,
+    tlx: float,
+    rtlx: float,
+    dominant: str,
+) -> TlxSession:
+    row = TlxSession(
+        astronaut_id=astronaut_id,
+        taken_at=taken_at,
+        task_description=task_description,
+        task_category=task_category,
+        duration_min=duration_min,
+        ratings_json=ratings_json,
+        comparisons_json=comparisons_json,
+        counts_json=counts_json,
+        tlx=tlx,
+        rtlx=rtlx,
+        dominant=dominant,
+    )
+    session.add(row)
+    session.commit()
+    session.refresh(row)
+    return row
+
+
+def get_cda_day(session: Session, astronaut_id: int, day: date) -> CdaDay | None:
+    stmt = select(CdaDay).where(CdaDay.astronaut_id == astronaut_id, CdaDay.day == day)
     return session.exec(stmt).first()
 
 
-def list_mental_days(session: Session, astronaut_id: int) -> list[MentalDay]:
-    stmt = select(MentalDay).where(MentalDay.astronaut_id == astronaut_id).order_by(MentalDay.day)
+def list_cda_days(session: Session, astronaut_id: int) -> list[CdaDay]:
+    stmt = select(CdaDay).where(CdaDay.astronaut_id == astronaut_id).order_by(CdaDay.day)
     return list(session.exec(stmt).all())
 
 
-def list_mental_tasks(session: Session, day_id: int) -> list[MentalTask]:
-    stmt = select(MentalTask).where(MentalTask.day_id == day_id).order_by(MentalTask.id)
+def get_sleep_profile(session: Session, astronaut_id: int) -> SleepProfile | None:
+    stmt = select(SleepProfile).where(SleepProfile.astronaut_id == astronaut_id)
+    return session.exec(stmt).first()
+
+
+def list_sleep_nights(session: Session, astronaut_id: int) -> list[SleepNight]:
+    stmt = (
+        select(SleepNight).where(SleepNight.astronaut_id == astronaut_id).order_by(SleepNight.day)
+    )
     return list(session.exec(stmt).all())
 
 
-def delete_mental_tasks(session: Session, day_id: int) -> None:
-    for task in list_mental_tasks(session, day_id):
-        session.delete(task)
-    session.commit()
+def get_sleep_night(session: Session, astronaut_id: int, day: date) -> SleepNight | None:
+    stmt = select(SleepNight).where(SleepNight.astronaut_id == astronaut_id, SleepNight.day == day)
+    return session.exec(stmt).first()
+
+
+def list_pvt_tests(session: Session, astronaut_id: int) -> list[PvtTest]:
+    stmt = (
+        select(PvtTest)
+        .where(PvtTest.astronaut_id == astronaut_id)
+        .order_by(PvtTest.taken_at, PvtTest.id)
+    )
+    return list(session.exec(stmt).all())

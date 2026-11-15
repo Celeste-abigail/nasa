@@ -6,7 +6,7 @@ Implementa el método **SCAN** (Scanning Confocal Acoustic Navigation): captura 
 línea base y clasifica el riesgo en tres niveles.
 
 El proyecto está diseñado como plataforma de salud del astronauta con cuatro módulos independientes:
-densidad ósea (SCAN), cortisol salival, radiación (TEPC) y salud mental (NASA-TLX + DMRS). Cada uno
+densidad ósea (SCAN), cortisol salival, radiación (TEPC) y salud mental (TLX, CDA, sueño y PVT). Cada uno
 tiene su propia fuente de datos y su propia tabla; el núcleo compartido es el perfil del astronauta
 y el motor de alertas.
 
@@ -234,20 +234,22 @@ Clasificación en tres capas, color final = la peor:
 Entrada: fecha-hora UTC, µSv/min, µGy/min opcional (para `Q̄`), región manual GCR/SAA, módulo, día
 de misión, duración y dosis previa. Detalle en [docs/radiation-spec.md](docs/radiation-spec.md).
 
-## Módulo de salud mental (NASA-TLX + DMRS + ALI)
+## Módulo de salud mental (cuestionarios)
 
-Sección independiente con la parte psicométrica de `mental.md` (sin su dosimetría TLD/CR-39):
+Sección independiente con cuatro instrumentos interactivos, sin sensores:
 
-- **NASA-TLX** por tarea en modo `WEIGHTED_FULL` (tallies que suman 15) o `RAW_FAST` (pesos 1/6).
-- **DMRS** diario (8 ítems) con subíndices PA/NA y puntaje global.
-- **WL diaria** ponderada por duración, **EWMA α=0,35**, **Z** de 7 días con piso σ=5,
-  **ALI = 0,55·EWMA_WL + 0,45·(100−EWMA_ánimo)** y penalización de +8 por deuda de sueño.
-- **4 zonas** (verde/amarilla/naranja/roja) con el protocolo del documento; la dosis aguda es un
-  campo manual opcional.
+- **NASA-TLX posmisión**: tarea + 6 escalas + 15 comparaciones aleatorias; `TLX`, `RTLX`, pesos y
+  dimensión dominante; curva con referencia Grier y línea base personal (EWMA).
+- **Chequeo Diario de Ánimo (CDA)**: 10 ítems, `IAD` y subíndices, semáforo provisional y con línea
+  base de 14 días.
+- **Sueño personalizado**: registro matutino, TIB/TST/SE, SRI, deuda de 7 días, ventana semanal y
+  descarte ambiental.
+- **PVT-B interactivo**: 60/180 s, lapsos, falsos inicios, velocidad y semáforo frente a la línea
+  base, con discrepancia subjetiva.
 
-El ejemplo del documento se reproduce (TLX 70,6667; DMRS 64,5). Detalle en
+La vista tiene dos pestañas: **Cuestionarios** (los cuatro formularios) y **Seguimiento** (curvas,
+prescripciones R1–R10, adherencia y aviso de privacidad). Detalle en
 [docs/mental-spec.md](docs/mental-spec.md).
-
 ## API
 
 | Método | Ruta | Descripción |

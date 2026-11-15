@@ -1,4 +1,4 @@
-"""Datos de ejemplo (perfil + serie osea + cortisol) para demos.
+"""Datos de ejemplo (perfil, series y cuestionarios) para demos.
 
 Uso:  uv run python -m app.scripts.seed [--force]
 """
@@ -10,12 +10,16 @@ from datetime import date, datetime, time, timedelta
 
 from sqlmodel import Session
 
+from app.domain import mental
 from app.domain.schemas import (
+    CdaInput,
     CortisolSampleCreate,
-    MentalDayIn,
-    MoodIn,
+    PvtInput,
     RadiationReadingCreate,
-    TlxTaskIn,
+    SleepNightIn,
+    SleepProfileIn,
+    TlxComparisonIn,
+    TlxSessionCreate,
 )
 from app.infrastructure import repositories
 from app.infrastructure.database import get_engine, init_db
@@ -77,51 +81,148 @@ RADIATION = {
     ]
 }
 
-# (dia, dia de mision, animo, carga de la tarea)
-MENTAL = {
+TLX_CHOICES = [
+    "MD",
+    "MD",
+    "OP",
+    "EF",
+    "MD",
+    "PD",
+    "OP",
+    "PD",
+    "PD",
+    "OP",
+    "EF",
+    "FR",
+    "OP",
+    "FR",
+    "EF",
+]
+TLX_VALUES = {
+    "AST-01": [55.0, 60.0, 60.0, 65.0, 60.0, 70.0],
+    "AST-02": [50.0, 55.0, 60.0],
+}
+CDA_DAYS = {"AST-01": 14, "AST-02": 7}
+SLEEP_TST = {"AST-01": [375, 400, 420, 350, 390, 410, 380], "AST-02": [380, 395, 405, 390, 400]}
+PVT_TRIALS = {
     "AST-01": [
-        ("2026-11-01", 20, (8, 8, 8, 8, 2, 2, 2, 2), 45.0),
-        ("2026-11-02", 21, (8, 7, 8, 8, 3, 2, 2, 3), 55.0),
-        ("2026-11-03", 22, (6, 6, 6, 6, 4, 3, 3, 4), 70.0),
-        ("2026-11-04", 23, (4, 4, 4, 4, 6, 6, 6, 6), 80.0),
-        ("2026-11-05", 24, (2, 2, 2, 2, 8, 8, 8, 8), 90.0),
+        [240, 245, 250, 235, 255, 244, 248, 251, 238, 247],
+        [242, 246, 249, 236, 252, 241, 247, 250, 239, 245],
+        [238, 244, 251, 237, 253, 242, 246, 249, 240, 243],
+        [241, 247, 250, 236, 254, 243, 248, 252, 239, 246],
+        [243, 245, 248, 238, 251, 244, 247, 250, 240, 249],
+        [245, 260, 231, 298, 410, 252, 240, 367, 229, 275, 90, 255],
     ],
     "AST-02": [
-        ("2026-11-02", 15, (7, 7, 7, 7, 3, 3, 3, 3), 50.0),
-        ("2026-11-03", 16, (7, 6, 7, 7, 3, 3, 4, 3), 60.0),
+        [250, 255, 260, 248, 262, 252, 258, 261, 249, 256],
+        [252, 257, 259, 249, 263, 253, 258, 260, 250, 255],
+        [248, 254, 261, 247, 264, 251, 257, 259, 249, 253],
     ],
 }
 
 
-def _mental_payload(mission_day: int, mood: tuple[int, ...], workload: float) -> MentalDayIn:
-    return MentalDayIn(
-        mission_day=mission_day,
-        mood=MoodIn(
-            m1_sleep=mood[0],
-            m2_vigor=mood[1],
-            m3_calm=mood[2],
-            m4_cohesion=mood[3],
-            m5_tension=mood[4],
-            m6_irrit=mood[5],
-            m7_dysphoria=mood[6],
-            m8_somatic=mood[7],
+def _comparisons() -> list[TlxComparisonIn]:
+    return [
+        TlxComparisonIn(pair=list(pair), choice=choice)
+        for pair, choice in zip(mental.PAIRS, TLX_CHOICES, strict=True)
+    ]
+
+
+def _cda_items(index: int) -> dict[str, int]:
+    sway = index % 4
+    raw = {
+        "animo": 8 - sway // 2,
+        "energia": 7 - sway // 2,
+        "motivacion": 8 - sway // 3,
+        "tension": 2 + sway,
+        "tristeza": 2 + sway // 2,
+        "irritabilidad": 3 + sway // 2,
+        "estres": 4 + sway,
+        "fatiga_mental": 5 + sway,
+        "sueno": 7 - sway // 2,
+        "conexion": 8 - sway // 3,
+    }
+    return {key: max(0, min(10, value)) for key, value in raw.items()}
+
+
+def _seed_mental(session: Session, code: str) -> None:
+    tlx_base = datetime(2026, 11, 1, 18, 0)
+    for index, value in enumerate(TLX_VALUES.get(code, [])):
+        mental_service.record_tlx(
+            session,
+            code,
+            TlxSessionCreate(
+                taken_at=tlx_base + timedelta(days=index),
+                task_description=f"Tarea de ejemplo {index + 1}",
+                task_category="EVA" if index % 2 == 0 else "Robotica",
+                duration_min=90,
+                ratings={dimension: int(value) for dimension in mental.DIMENSIONS},
+                comparisons=_comparisons(),
+            ),
+            "es",
+        )
+
+    for index in range(CDA_DAYS.get(code, 0)):
+        mental_service.upsert_cda(
+            session,
+            code,
+            date(2026, 10, 20) + timedelta(days=index),
+            CdaInput(items=_cda_items(index)),
+            "es",
+        )
+
+    mental_service.save_profile(
+        session,
+        code,
+        SleepProfileIn(
+            need_hours=7.5,
+            scheduled_wake="06:00",
+            window_minutes=450,
+            blocked=False,
         ),
-        tasks=[
-            TlxTaskIn(
-                name="Tarea de ejemplo",
-                duration_min=120,
-                eval_mode="RAW_FAST",
-                ratings={
-                    "MD": int(workload),
-                    "PD": int(workload - 5),
-                    "TD": int(workload - 10),
-                    "OP": int(workload),
-                    "EF": int(workload - 5),
-                    "FR": int(workload - 10),
-                },
-            )
-        ],
+        "es",
     )
+    for index, tst in enumerate(SLEEP_TST.get(code, [])):
+        day = date(2026, 11, 2) + timedelta(days=index)
+        entry = datetime.combine(day - timedelta(days=1), time(22, 30))
+        final = entry + timedelta(minutes=25 + 40 + tst)
+        exit_at = final + timedelta(minutes=20)
+        mental_service.upsert_sleep(
+            session,
+            code,
+            SleepNightIn(
+                day=day,
+                entry_at=entry,
+                latency_min=25,
+                awakenings=2,
+                waso_min=40,
+                cause_group="A" if index % 3 else "B",
+                cause_detail="work" if index % 3 else "noise",
+                final_wake_at=final,
+                exit_at=exit_at,
+                quality=6,
+                inertia=8 if index == 2 else 3,
+                dreams="nightmare" if index == 4 else "neutral",
+                environmental=["nothing"],
+                nap_min=0,
+            ),
+            "es",
+        )
+
+    pvt_base = datetime(2026, 11, 1, 10, 0)
+    for index, trials in enumerate(PVT_TRIALS.get(code, [])):
+        mental_service.record_pvt(
+            session,
+            code,
+            PvtInput(
+                taken_at=pvt_base + timedelta(days=index),
+                mode=60,
+                trials=trials,
+                false_starts=0,
+                subjective_alertness=8 if index == len(PVT_TRIALS[code]) - 1 else 5,
+            ),
+            "es",
+        )
 
 
 def main() -> int:
@@ -199,20 +300,17 @@ def main() -> int:
                     )
                 print(f"{code}: {len(rows)} lecturas de radiacion cargadas")
 
-            existing_mental = repositories.list_mental_days(session, astronaut.id or 0)
+            existing_mental = repositories.list_tlx_sessions(session, astronaut.id or 0)
             if existing_mental and not force:
-                print(f"{code}: ya tiene {len(existing_mental)} dias de salud mental")
+                print(f"{code}: ya tiene {len(existing_mental)} sesiones TLX")
             else:
-                rows = MENTAL.get(code, [])
-                for day_str, mission_day, mood, workload in rows:
-                    mental_service.upsert(
-                        session=session,
-                        code=astronaut.code,
-                        day=date.fromisoformat(day_str),
-                        payload=_mental_payload(mission_day, mood, workload),
-                        lang="es",
-                    )
-                print(f"{code}: {len(rows)} dias de salud mental cargados")
+                _seed_mental(session, astronaut.code)
+                print(
+                    f"{code}: {len(TLX_VALUES.get(code, []))} TLX, "
+                    f"{CDA_DAYS.get(code, 0)} CDA, "
+                    f"{len(SLEEP_TST.get(code, []))} noches, "
+                    f"{len(PVT_TRIALS.get(code, []))} PVT"
+                )
 
     print("listo: backend/data/nasa_space.db")
     return 0

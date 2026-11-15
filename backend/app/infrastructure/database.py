@@ -65,6 +65,9 @@ def _migrate_schema() -> None:
             existing = {row[1] for row in connection.exec_driver_sql(f"PRAGMA table_info({table})")}
             if existing and column not in existing:
                 connection.exec_driver_sql(statement)
+        # Modelo de salud mental anterior: reemplazado por el cuestionario v1.1.
+        connection.exec_driver_sql("DROP TABLE IF EXISTS mental_task")
+        connection.exec_driver_sql("DROP TABLE IF EXISTS mental_day")
         connection.commit()
 
 

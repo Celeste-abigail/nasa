@@ -1,172 +1,190 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime, timedelta
 
 import pytest
 
 from app.domain import mental
 
+CHOICES = ["MD", "MD", "OP", "EF", "MD", "PD", "OP", "PD", "PD", "OP", "EF", "FR", "OP", "FR", "EF"]
 
-def mood_values(m1=6, m2=5, m3=6, m4=8, m5=4, m6=3, m7=2, m8=4) -> dict[str, int]:
-    return {
-        "m1_sleep": m1,
-        "m2_vigor": m2,
-        "m3_calm": m3,
-        "m4_cohesion": m4,
-        "m5_tension": m5,
-        "m6_irrit": m6,
-        "m7_dysphoria": m7,
-        "m8_somatic": m8,
-    }
+
+def comparisons() -> list[dict]:
+    return [
+        {"pair": list(pair), "choice": choice}
+        for pair, choice in zip(mental.PAIRS, CHOICES, strict=True)
+    ]
+
+
+def tlx_series(values: list[float]) -> list[mental.TlxPoint]:
+    start = datetime(2026, 1, 1, 12, 0)
+    return mental.evaluate_tlx_series(
+        [(start + timedelta(days=index), value, value, "MD") for index, value in enumerate(values)]
+    )
 
 
 def test_tlx_matches_document_example() -> None:
-    result = mental.compute_tlx(
+    result = mental.score_tlx(
         {"MD": 75, "PD": 65, "TD": 65, "OP": 75, "EF": 70, "FR": 65},
-        {"MD": 3, "PD": 3, "TD": 0, "OP": 4, "EF": 3, "FR": 2},
-        "WEIGHTED_FULL",
+        comparisons(),
     )
-    assert result.overall == pytest.approx(70.6667, abs=1e-3)
-    assert sum(result.weights.values()) == pytest.approx(1.0)
-    assert result.weights["TD"] == 0.0
-    assert result.weights["OP"] == pytest.approx(4 / 15)
+    assert result.counts == {"MD": 3, "PD": 3, "TD": 0, "OP": 4, "EF": 3, "FR": 2}
+    assert result.tlx == pytest.approx(70.67, abs=0.01)
+    assert result.rtlx == pytest.approx(69.17, abs=0.01)
+    assert result.dominant == "OP"
+    assert result.contributions["OP"] == pytest.approx(20.0, abs=0.01)
 
 
-def test_tlx_raw_fast_uses_uniform_weights() -> None:
-    ratings = {"MD": 50, "PD": 60, "TD": 70, "OP": 80, "EF": 90, "FR": 100}
-    result = mental.compute_tlx(ratings, None, "RAW_FAST")
-    assert result.overall == pytest.approx(75.0)
-    assert all(weight == pytest.approx(1 / 6) for weight in result.weights.values())
+def test_tlx_uniform_ratings() -> None:
+    result = mental.score_tlx({key: 50 for key in mental.DIMENSIONS}, comparisons())
+    assert result.tlx == pytest.approx(50.0)
+    assert result.rtlx == pytest.approx(50.0)
 
 
-@pytest.mark.parametrize(
-    "ratings",
-    [
-        {"MD": 72, "PD": 65, "TD": 65, "OP": 75, "EF": 70, "FR": 65},
-        {"MD": 105, "PD": 65, "TD": 65, "OP": 75, "EF": 70, "FR": 65},
-        {"MD": 75, "PD": 65, "TD": 65, "OP": 75, "EF": 70},
-    ],
-)
-def test_tlx_rejects_invalid_ratings(ratings) -> None:
+def test_tlx_requires_fifteen_comparisons() -> None:
     with pytest.raises(ValueError):
-        mental.compute_tlx(ratings, None, "RAW_FAST")
+        mental.score_tlx({key: 50 for key in mental.DIMENSIONS}, comparisons()[:-1])
 
 
-def test_tlx_weighted_requires_fifteen_tallies() -> None:
+def test_tlx_rejects_invalid_rating_step() -> None:
     with pytest.raises(ValueError):
-        mental.compute_tlx(
-            {"MD": 75, "PD": 65, "TD": 65, "OP": 75, "EF": 70, "FR": 65},
-            {"MD": 3, "PD": 3, "TD": 0, "OP": 4, "EF": 3, "FR": 1},
-            "WEIGHTED_FULL",
-        )
+        mental.score_tlx({**{key: 50 for key in mental.DIMENSIONS}, "MD": 52}, comparisons())
 
 
-def test_mood_scores_match_document_formula() -> None:
-    result = mental.compute_mood(mood_values())
-    assert result.pa == pytest.approx(62.5)
-    assert result.na == pytest.approx(32.5)
-    assert result.dmrs == pytest.approx(64.5)
+def test_tlx_calibration_colors() -> None:
+    assert tlx_series([70.67])[-1].color == mental.COLOR_RED
+    assert tlx_series([49.0])[-1].color == mental.COLOR_GREEN
+    assert tlx_series([55.0])[-1].color == mental.COLOR_YELLOW
 
 
-def test_daily_workload_weights_by_duration() -> None:
-    assert mental.daily_workload([(70.0, 120), (30.0, 40)]) == pytest.approx(60.0)
-    assert mental.daily_workload([]) == 0.0
+def test_tlx_personal_baseline_sem2() -> None:
+    point = tlx_series([50, 45, 55, 50, 60, 55])[-1]
+    assert point.phase == "baseline"
+    assert point.z == pytest.approx(0.53, abs=0.01)
+    assert point.ewma == pytest.approx(52.90, abs=0.01)
+    assert point.limit_warn == pytest.approx(55.42, abs=0.01)
+    assert point.color == mental.COLOR_GREEN
 
 
-def test_ewma_alpha() -> None:
-    assert mental.ewma(50.0, 100.0) == pytest.approx(67.5)
-    assert mental.ewma(0.0, 10.0, alpha=1.0) == pytest.approx(10.0)
+def test_tlx_personal_baseline_sem3() -> None:
+    point = tlx_series([50, 45, 55, 50, 60, 55, 48, 52, 58, 50, 62, 66])[-1]
+    assert point.z == pytest.approx(2.46, abs=0.01)
+    assert point.ewma == pytest.approx(58.53, abs=0.01)
+    assert point.color == mental.COLOR_RED
 
 
-def _series(days: list[dict]) -> list[mental.DayResult]:
-    inputs = [
-        mental.DayInput(
-            day=date(2026, 11, 1 + index),
-            mission_day=index + 1,
-            mood=item.get("mood", mood_values()),
-            wl_day=item["wl"],
-            acute_24h_dose_mgy=item.get("acute"),
-        )
-        for index, item in enumerate(days)
+def test_tlx_underload() -> None:
+    assert tlx_series([20.0])[-1].underload is True
+
+
+CDA_VALUES = {
+    "animo": 7,
+    "energia": 6,
+    "motivacion": 7,
+    "tension": 3,
+    "tristeza": 2,
+    "irritabilidad": 4,
+    "estres": 5,
+    "fatiga_mental": 6,
+    "sueno": 5,
+    "conexion": 8,
+}
+
+
+def test_cda_scores_match_document() -> None:
+    score = mental.score_cda(CDA_VALUES)
+    assert score.iad == pytest.approx(63.0)
+    assert score.positive == pytest.approx(66.67, abs=0.01)
+    assert score.negative == pytest.approx(30.0)
+    assert score.stress_fatigue == pytest.approx(55.0)
+    assert score.sleep == pytest.approx(50.0)
+    assert score.connection == pytest.approx(80.0)
+
+
+def test_cda_perfect_day() -> None:
+    values = {key: (10 if direction == "+" else 0) for key, direction in mental.CDA_ITEMS}
+    assert mental.score_cda(values).iad == pytest.approx(100.0)
+
+
+def test_cda_rejects_out_of_range() -> None:
+    with pytest.raises(ValueError):
+        mental.score_cda({**CDA_VALUES, "animo": 11})
+
+
+def test_night_metrics_match_document() -> None:
+    metrics = mental.night_metrics(
+        datetime(2026, 11, 1, 22, 30),
+        25,
+        40,
+        datetime(2026, 11, 2, 5, 50),
+        datetime(2026, 11, 2, 6, 10),
+    )
+    assert metrics.tib_min == pytest.approx(460)
+    assert metrics.tst_min == pytest.approx(375)
+    assert metrics.efficiency == pytest.approx(81.52, abs=0.01)
+    assert metrics.midpoint_at.strftime("%H:%M:%S") == "02:22:30"
+
+
+def _regular_nights() -> list[tuple[datetime, datetime]]:
+    return [
+        (datetime(2026, 11, 1 + index, 22, 55), datetime(2026, 11, 2 + index, 5, 50))
+        for index in range(7)
     ]
-    return mental.build_series(inputs)
 
 
-def test_series_applies_sleep_debt_penalty() -> None:
-    results = _series(
-        [
-            {"wl": 50.0, "mood": mood_values(m1=3)},
-            {"wl": 50.0, "mood": mood_values(m1=2)},
-        ]
-    )
-    assert results[0].sleep_debt is False
-    assert results[1].sleep_debt is True
-    assert results[1].ali > results[0].ali
+def test_sri_perfect_regularity() -> None:
+    assert mental.sri(_regular_nights()) == pytest.approx(100.0)
 
 
-def test_zone_orange_when_mood_below_baseline() -> None:
-    results = _series(
-        [
-            {
-                "wl": 50.0,
-                "mood": mood_values(m1=5, m2=5, m3=5, m4=5, m5=5, m6=5, m7=5, m8=5),
-            }
-        ]
-    )
-    assert results[-1].dmrs == pytest.approx(50.0)
-    assert results[-1].zone == "orange"
+def test_sri_shifted_night() -> None:
+    nights = _regular_nights()
+    nights[3] = (datetime(2026, 11, 4, 1, 55), datetime(2026, 11, 4, 8, 50))
+    assert mental.sri(nights) == pytest.approx(83.33, abs=0.01)
 
 
-def test_zone_red_when_mood_is_critical() -> None:
-    results = _series([{"wl": 60.0, "mood": mood_values(m7=10, m5=10, m8=10, m6=10)}])
-    assert results[-1].zone == "red"
+def test_sleep_debt_and_window() -> None:
+    values = [375, 400, 420, 350, 390, 410, 380]
+    nights = [(date(2026, 11, 1 + index), value) for index, value in enumerate(values)]
+    debt = mental.sleep_debt(nights, 7.5)
+    assert debt / 60.0 == pytest.approx(7.08, abs=0.01)
+
+    assert mental.suggest_window(450, 81.5, 7.5) == 435
+    assert mental.suggest_window(450, 92.0, 7.5) == 465
+    assert mental.suggest_window(450, 87.0, 7.5) == 450
+    assert mental.suggest_window(360, 70.0, 7.5) == 360
+    assert mental.suggest_window(450, 70.0, 7.5, blocked=True) == 450
 
 
-def test_zone_red_when_ali_is_critical() -> None:
-    results = _series([{"wl": 100.0, "mood": mood_values()}])
-    assert results[-1].ali > 65
-    assert results[-1].zone == "red"
-    assert "ali_critical" in results[-1].reasons
+def test_sleep_series_flags_debt() -> None:
+    values = [375, 400, 420, 350, 390, 410, 380]
+    inputs = [
+        mental.SleepNightInput(
+            day=date(2026, 11, 1 + index),
+            tst_min=value,
+            efficiency=81.5,
+            midpoint_at=datetime(2026, 11, 2 + index, 2, 22),
+            inertia=2,
+            environmental=(),
+        )
+        for index, value in enumerate(values)
+    ]
+    points = mental.evaluate_sleep_series(inputs, 7.5)
+    assert points[-1].debt_hours == pytest.approx(7.08, abs=0.01)
+    assert "debt_watch" in points[-1].flags
 
 
-def test_zone_red_for_acute_radiation() -> None:
-    results = _series([{"wl": 50.0, "mood": mood_values(), "acute": 600.0}])
-    assert results[-1].acute_radiation is True
-    assert results[-1].zone == "red"
+def test_pvt_metrics_match_document() -> None:
+    trials = [245, 260, 231, 298, 410, 252, 240, 367, 229, 275, 90, 255]
+    metrics = mental.pvt_metrics(trials)
+    assert metrics["valid_count"] == 11
+    assert metrics["lapses"] == 2
+    assert metrics["false_starts"] == 1
+    assert metrics["mean_rt_ms"] == pytest.approx(278.36, abs=0.01)
+    assert metrics["speed"] == pytest.approx(3.712, abs=0.001)
 
 
-def test_zone_yellow_when_compensated_overload() -> None:
-    results = _series(
-        [
-            {
-                "wl": 80.0,
-                "mood": mood_values(m1=10, m2=10, m3=10, m4=10, m5=0, m6=0, m7=0, m8=0),
-            }
-        ]
-    )
-    assert results[-1].zone == "yellow"
-
-
-def test_zone_green_homeostasis() -> None:
-    results = _series(
-        [
-            {
-                "wl": 40.0,
-                "mood": mood_values(m1=9, m2=9, m3=9, m4=9, m5=1, m6=1, m7=1, m8=1),
-            }
-        ]
-    )
-    assert results[-1].zone == "green"
-
-
-def test_burnout_rule_red() -> None:
-    results = _series(
-        [
-            {
-                "wl": 20.0,
-                "mood": mood_values(m1=5, m2=5, m3=5, m4=5, m5=8, m6=8, m7=8, m8=8),
-            }
-        ]
-    )
-    assert results[-1].burnout is True
-    assert results[-1].zone == "red"
+def test_pvt_alert_matches_document() -> None:
+    prior = [4.10, 4.25, 4.05, 4.20, 4.15, 4.30]
+    color, z = mental.pvt_alert(3.712, prior)
+    assert z == pytest.approx(-2.22, abs=0.01)
+    assert color == mental.COLOR_RED
