@@ -20,9 +20,47 @@ import { useToast } from "./modules/shell/Toast";
 
 type View = "overview" | "bone" | "cortisol" | "radiation" | "mental";
 
+const MODULE_SCIENTIFIC_FOOTERS: Record<
+  Exclude<View, "overview">,
+  { formula: string; dois: string[] }
+> = {
+  bone: {
+    formula: "BV/TV = 3.89e-4 * UV - 9e-4 * BUA - 0.456",
+    dois: [
+      "https://doi.org/10.1117/12.810048",
+      "https://doi.org/10.1016/j.actaastro.2012.08.032",
+      "https://doi.org/10.1121/1.4784949",
+    ],
+  },
+  cortisol: {
+    formula: "z = (ln(value) - ln(median(t))) / σ_ln · CLIA/ECLIA Circadian Model",
+    dois: [
+      "https://doi.org/10.1016/j.psyneuen.2012.04.019",
+      "https://doi.org/10.1515/cclm-2006-0458",
+      "https://doi.org/10.1038/s41526-018-0041-4",
+    ],
+  },
+  radiation: {
+    formula: "F30 = H30 / 250 mSv · F_career = H_total / 600 mSv · ISS TEPC A/B/C",
+    dois: [
+      "https://doi.org/10.1016/j.lssr.2020.04.001",
+      "https://doi.org/10.1667/RR1889.1",
+      "https://doi.org/10.1029/2009SW000492",
+    ],
+  },
+  mental: {
+    formula: "NASA-TLX · DMRS (IAD) · Sleep Architecture (SE/SRI) · PVT-B",
+    dois: [
+      "https://doi.org/10.1016/S0166-4115(08)62386-9",
+      "https://doi.org/10.1177/1541931215591373",
+      "https://doi.org/10.5665/sleep.1158",
+    ],
+  },
+};
+
 export default function App() {
   const { t, i18n } = useTranslation();
-  const lang = i18n.resolvedLanguage ?? "es";
+  const lang = i18n.resolvedLanguage ?? "en";
   const queryClient = useQueryClient();
   const { message, show } = useToast();
 
@@ -30,7 +68,10 @@ export default function App() {
   const [crewOpen, setCrewOpen] = useState(false);
   const [view, setView] = useState<View>(() => {
     const hash = window.location.hash.replace("#", "");
-    return hash === "bone" || hash === "cortisol" || hash === "radiation" || hash === "mental"
+    return hash === "bone" ||
+      hash === "cortisol" ||
+      hash === "radiation" ||
+      hash === "mental"
       ? hash
       : "overview";
   });
@@ -39,7 +80,11 @@ export default function App() {
     const target = view === "overview" ? "" : `#${view}`;
     const current = window.location.hash;
     if (current !== target) {
-      history.replaceState(null, "", `${window.location.pathname}${window.location.search}${target}`);
+      history.replaceState(
+        null,
+        "",
+        `${window.location.pathname}${window.location.search}${target}`
+      );
     }
   }, [view]);
 
@@ -80,11 +125,26 @@ export default function App() {
   const meta = metaQuery.data;
   const assessment = assessmentQuery.data;
   const profile = astronauts.find((item) => item.code === active) ?? null;
-  const loadError = metaQuery.isError || astronautsQuery.isError || assessmentQuery.isError;
+  const loadError =
+    metaQuery.isError || astronautsQuery.isError || assessmentQuery.isError;
 
   async function refresh() {
     await queryClient.invalidateQueries({ queryKey: ["monitoring"] });
   }
+
+  const activeFooter =
+    view !== "overview"
+      ? {
+          formula:
+            view === "bone" && meta?.model.formula
+              ? meta.model.formula
+              : MODULE_SCIENTIFIC_FOOTERS[view].formula,
+          dois:
+            view === "bone" && assessment?.model.references?.length
+              ? assessment.model.references
+              : MODULE_SCIENTIFIC_FOOTERS[view].dois,
+        }
+      : null;
 
   return (
     <div className="app">
@@ -102,7 +162,11 @@ export default function App() {
 
       {view !== "overview" && (
         <div className="detail-bar">
-          <button type="button" className="back-btn" onClick={() => setView("overview")}>
+          <button
+            type="button"
+            className="back-btn"
+            onClick={() => setView("overview")}
+          >
             <i className="fa-solid fa-arrow-left" aria-hidden="true" />
             {t("overview.back")}
           </button>
@@ -180,7 +244,9 @@ export default function App() {
                 lang={lang}
                 onToast={show}
                 onSaved={() => {
-                  void queryClient.invalidateQueries({ queryKey: ["astronauts"] });
+                  void queryClient.invalidateQueries({
+                    queryKey: ["astronauts"],
+                  });
                   void refresh();
                 }}
               />
@@ -204,7 +270,9 @@ export default function App() {
                 <div className="legend">
                   <span>
                     <i className="swatch ok" />
-                    {t("monitoring.legend.normal", { value: meta.thresholds.risk_rate })}
+                    {t("monitoring.legend.normal", {
+                      value: meta.thresholds.risk_rate,
+                    })}
                   </span>
                   <span>
                     <i className="swatch warn" />
@@ -230,7 +298,9 @@ export default function App() {
             </div>
 
             {assessment && (
-              <RecommendationsPanel recommendation={assessment.recommendations} />
+              <RecommendationsPanel
+                recommendation={assessment.recommendations}
+              />
             )}
 
             <div>
@@ -241,11 +311,16 @@ export default function App() {
         </div>
       )}
 
-      {view === "bone" && (
-        <footer className="footer">
-          <span>{meta?.model.formula ?? ""}</span>
-          {assessment?.model.references.map((reference) => (
-            <a key={reference} href={reference} target="_blank" rel="noreferrer">
+      {activeFooter && (
+        <footer className="footer labquip-doi-footer">
+          <span>{activeFooter.formula}</span>
+          {activeFooter.dois.map((reference) => (
+            <a
+              key={reference}
+              href={reference}
+              target="_blank"
+              rel="noreferrer"
+            >
               {reference.replace("https://doi.org/", "DOI ")}
             </a>
           ))}

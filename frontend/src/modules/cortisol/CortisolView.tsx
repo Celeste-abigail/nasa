@@ -155,17 +155,6 @@ export function CortisolView({ astronaut, lang, onToast }: Props) {
           <div>
             <h2>{t("cortisol.history.title")}</h2>
             <CortisolHistory samples={data.samples} lang={lang} />
-            <p className="hint">
-              {t("cortisol.reference", {
-                method: data.reference.method,
-                source: data.reference.source,
-              })}
-              {" · "}
-              {t("cortisol.age_range", {
-                min: data.reference.age_range[0],
-                max: data.reference.age_range[1],
-              })}
-            </p>
           </div>
         )}
       </section>

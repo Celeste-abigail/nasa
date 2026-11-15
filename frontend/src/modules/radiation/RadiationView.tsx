@@ -5,7 +5,11 @@ import { useTranslation } from "react-i18next";
 import { ApiError, api } from "../../lib/api";
 import { fmt, formatDateTime } from "../../lib/format";
 import { nowUtcInput } from "../../lib/time";
-import type { RadiationAssessment, RadiationLayer, Region } from "../../lib/types";
+import type {
+  RadiationAssessment,
+  RadiationLayer,
+  Region,
+} from "../../lib/types";
 import { RecommendationPanel } from "../shell/RecommendationPanel";
 import { TemporalField } from "../../components/TemporalField";
 
@@ -44,17 +48,20 @@ export function RadiationView({ astronaut, lang, onToast }: Props) {
       return api.createRadiation(
         astronaut,
         {
-          measured_at: measuredAt.length === 16 ? `${measuredAt}:00` : measuredAt,
+          measured_at:
+            measuredAt.length === 16 ? `${measuredAt}:00` : measuredAt,
           eq_rate: eqValue,
           dose_rate: dose.trim() ? Number(dose.replace(",", ".")) : null,
           region,
           module: module.trim() || null,
           mission_day: missionDay.trim() ? Number(missionDay) : null,
           planned_days: plannedDays.trim() ? Number(plannedDays) : null,
-          prior_career_msv: prior.trim() ? Number(prior.replace(",", ".")) : null,
+          prior_career_msv: prior.trim()
+            ? Number(prior.replace(",", "."))
+            : null,
           notes: notes.trim() || null,
         },
-        lang,
+        lang
       );
     },
     onSuccess: () => {
@@ -69,7 +76,7 @@ export function RadiationView({ astronaut, lang, onToast }: Props) {
       setError(
         reason instanceof ApiError || reason instanceof Error
           ? reason.message
-          : t("radiation.form.error"),
+          : t("radiation.form.error")
       );
     },
   });
@@ -85,9 +92,15 @@ export function RadiationView({ astronaut, lang, onToast }: Props) {
           t("recommendations.radiation.3.3"),
         ]
       : recColor === 2
-        ? [t("recommendations.radiation.2.1"), t("recommendations.radiation.2.2")]
+        ? [
+            t("recommendations.radiation.2.1"),
+            t("recommendations.radiation.2.2"),
+          ]
         : recColor === 1
-          ? [t("recommendations.radiation.1.1"), t("recommendations.radiation.1.2")]
+          ? [
+              t("recommendations.radiation.1.1"),
+              t("recommendations.radiation.1.2"),
+            ]
           : [t("recommendations.radiation.0.1")];
 
   return (
@@ -238,7 +251,9 @@ export function RadiationView({ astronaut, lang, onToast }: Props) {
               mutation.mutate();
             }}
           >
-            {mutation.isPending ? t("radiation.form.saving") : t("radiation.form.submit")}
+            {mutation.isPending
+              ? t("radiation.form.saving")
+              : t("radiation.form.submit")}
           </button>
         </div>
       </section>
@@ -250,7 +265,9 @@ export function RadiationView({ astronaut, lang, onToast }: Props) {
             <small className="subtitle">{t("radiation.subtitle")}</small>
           </h2>
 
-          {query.isLoading && <div className="empty">{t("common.loading")}</div>}
+          {query.isLoading && (
+            <div className="empty">{t("common.loading")}</div>
+          )}
           {query.isError && (
             <>
               <p className="err">{t("common.error")}</p>
@@ -260,16 +277,20 @@ export function RadiationView({ astronaut, lang, onToast }: Props) {
             </>
           )}
 
-          {data && !data.current && <div className="empty">{t("radiation.empty")}</div>}
+          {data && !data.current && (
+            <div className="empty">{t("radiation.empty")}</div>
+          )}
 
           {data?.current && (
             <div className={`radiation-banner c${data.color ?? 0}`}>
               <span className="badge">
-                {data.color ? t(`radiation.color.${data.color}`) : t("radiation.color.none")}
+                {data.color
+                  ? t(`radiation.color.${data.color}`)
+                  : t("radiation.color.none")}
               </span>
               <span>
                 {fmt(data.current.eq_rate_usv_min, lang, 2)} µSv/min ·{" "}
-                {data.current.region.toUpperCase()}
+                {t(`radiation.region.${data.current.region}`)}
               </span>
             </div>
           )}
@@ -277,7 +298,12 @@ export function RadiationView({ astronaut, lang, onToast }: Props) {
           {data && (
             <div className="cortisol-cards">
               {layers.map((key) => (
-                <LayerCard key={key} title={t(`radiation.layer.${key}.title`)} layer={data.layers[key]} lang={lang} />
+                <LayerCard
+                  key={key}
+                  title={t(`radiation.layer.${key}.title`)}
+                  layer={data.layers[key]}
+                  lang={lang}
+                />
               ))}
             </div>
           )}
@@ -288,7 +314,8 @@ export function RadiationView({ astronaut, lang, onToast }: Props) {
                 <h3>{t("radiation.cumulative.h30")}</h3>
                 <b>{fmt(data.cumulative.h_30d_msv, lang, 3)} mSv</b>
                 <span>
-                  {t("radiation.cumulative.f30")}: {fmt(data.cumulative.f30, lang, 2)}
+                  {t("radiation.cumulative.f30")}:{" "}
+                  {fmt(data.cumulative.f30, lang, 2)}
                 </span>
               </div>
               <div className="cortisol-card">
@@ -303,7 +330,8 @@ export function RadiationView({ astronaut, lang, onToast }: Props) {
                 <h3>{t("radiation.cumulative.fcareer")}</h3>
                 <b>{fmt(data.cumulative.f_career, lang, 2)}</b>
                 <span>
-                  {data.reference.limits.career_msv} mSv · {t("radiation.cumulative.f30")}{" "}
+                  {data.reference.limits.career_msv} mSv ·{" "}
+                  {t("radiation.cumulative.f30")}{" "}
                   {data.reference.limits.window_30d_msv} mSv
                 </span>
               </div>
@@ -351,7 +379,9 @@ export function RadiationView({ astronaut, lang, onToast }: Props) {
               })}
             </p>
           )}
-          {data?.reference.used_fallback && <p className="hint">{t("radiation.fallback")}</p>}
+          {data?.reference.used_fallback && (
+            <p className="hint">{t("radiation.fallback")}</p>
+          )}
         </div>
 
         {data && (
@@ -370,38 +400,43 @@ export function RadiationView({ astronaut, lang, onToast }: Props) {
                   </tr>
                 </thead>
                 <tbody>
-                  {[...data.readings].reverse().slice(0, 20).map((reading) => {
-                    const p95 = data.layers.a.p95;
-                    const p99 = data.layers.a.p99;
-                    const color =
-                      p95 === null || p99 === null
-                        ? 0
-                        : reading.eq_rate_usv_min <= p95
-                          ? 1
-                          : reading.eq_rate_usv_min <= p99
-                            ? 2
-                            : 3;
-                    return (
-                      <tr key={reading.id}>
-                        <td>{formatDateTime(reading.measured_at, lang)}</td>
-                        <td>{t(`radiation.region.${reading.region}`)}</td>
-                        <td>{fmt(reading.eq_rate_usv_min, lang, 2)}</td>
-                        <td>
-                          {reading.dose_rate_ugy_min === null
-                            ? "—"
-                            : fmt(reading.dose_rate_ugy_min, lang, 2)}
-                        </td>
-                        <td>{fmt(reading.q_factor, lang, 2)}</td>
-                        <td className={`c${color}`}>
-                          {color ? (
-                            <span className="badge">{t(`radiation.color.${color}`)}</span>
-                          ) : (
-                            "—"
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {[...data.readings]
+                    .reverse()
+                    .slice(0, 20)
+                    .map((reading) => {
+                      const p95 = data.layers.a.p95;
+                      const p99 = data.layers.a.p99;
+                      const color =
+                        p95 === null || p99 === null
+                          ? 0
+                          : reading.eq_rate_usv_min <= p95
+                            ? 1
+                            : reading.eq_rate_usv_min <= p99
+                              ? 2
+                              : 3;
+                      return (
+                        <tr key={reading.id}>
+                          <td>{formatDateTime(reading.measured_at, lang)}</td>
+                          <td>{t(`radiation.region.${reading.region}`)}</td>
+                          <td>{fmt(reading.eq_rate_usv_min, lang, 2)}</td>
+                          <td>
+                            {reading.dose_rate_ugy_min === null
+                              ? "—"
+                              : fmt(reading.dose_rate_ugy_min, lang, 2)}
+                          </td>
+                          <td>{fmt(reading.q_factor, lang, 2)}</td>
+                          <td className={`c${color}`}>
+                            {color ? (
+                              <span className="badge">
+                                {t(`radiation.color.${color}`)}
+                              </span>
+                            ) : (
+                              "—"
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                 </tbody>
               </table>
             </div>
@@ -436,14 +471,20 @@ function LayerCard({
             : `${fmt(layer.value, lang, 2)}`}
       </span>
       <span>
-        {t("radiation.layer.p95")}: {fmt(layer.p95, lang, 2)} · {t("radiation.layer.p99")}:{" "}
-        {fmt(layer.p99, lang, 2)}
+        {t("radiation.layer.p95")}: {fmt(layer.p95, lang, 2)} ·{" "}
+        {t("radiation.layer.p99")}: {fmt(layer.p99, lang, 2)}
       </span>
     </div>
   );
 }
 
-function RadiationChart({ data, lang }: { data: RadiationAssessment; lang: string }) {
+function RadiationChart({
+  data,
+  lang,
+}: {
+  data: RadiationAssessment;
+  lang: string;
+}) {
   const readings = data.readings.slice(-30);
   const p95 = data.layers.a.p95;
   const p99 = data.layers.a.p99;
@@ -458,9 +499,10 @@ function RadiationChart({ data, lang }: { data: RadiationAssessment; lang: strin
   const maxValue = Math.max(
     0.5,
     ...readings.map((reading) => reading.eq_rate_usv_min),
-    p99 ?? 0,
+    p99 ?? 0
   );
-  const X = (index: number) => L + (index / Math.max(1, readings.length - 1)) * (W - L - R);
+  const X = (index: number) =>
+    L + (index / Math.max(1, readings.length - 1)) * (W - L - R);
   const Y = (value: number) => H - B - (value / maxValue) * (H - T - B);
 
   return (
@@ -481,10 +523,22 @@ function RadiationChart({ data, lang }: { data: RadiationAssessment; lang: strin
       ))}
 
       {p95 !== null && (
-        <line x1={L} x2={W - R} y1={Y(p95)} y2={Y(p95)} className="limit-p95" />
+        <line
+          x1={L}
+          x2={W - R}
+          y1={Y(p95)}
+          y2={Y(p95)}
+          className="limit-p95"
+        />
       )}
       {p99 !== null && (
-        <line x1={L} x2={W - R} y1={Y(p99)} y2={Y(p99)} className="limit-p99" />
+        <line
+          x1={L}
+          x2={W - R}
+          y1={Y(p99)}
+          y2={Y(p99)}
+          className="limit-p99"
+        />
       )}
 
       <polyline

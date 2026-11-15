@@ -11,7 +11,6 @@ import {
   type ModuleKey,
 } from "../../lib/severity";
 import { SummaryCard } from "./SummaryCard";
-import { BodyDiagnostic } from "./BodyDiagnostic";
 import { useOverview } from "./useOverview";
 
 interface Props {
@@ -62,9 +61,11 @@ function standardBadge(sev: number, lang: string): string {
 function ArtemisFloatingSprite({
   spriteBase,
   alt,
+  isEn,
 }: {
   spriteBase: string;
   alt: string;
+  isEn: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [failed, setFailed] = useState(false);
@@ -164,7 +165,10 @@ function ArtemisFloatingSprite({
   if (failed) {
     return (
       <div className="sprite-missing">
-        Coloca <b>{spriteBase}.png</b> en <code>frontend/public/sprites/</code>
+        {isEn ? "Place " : "Coloca "}
+        <b>{spriteBase}.png</b>
+        {isEn ? " in " : " en "}
+        <code>frontend/public/sprites/</code>
       </div>
     );
   }
@@ -181,6 +185,7 @@ function ArtemisFloatingSprite({
 
 export function OverviewView({ astronaut, lang, onOpen }: Props) {
   const { t } = useTranslation();
+  const isEn = lang.startsWith("en");
   const { bone, cortisol, radiation, mental } = useOverview(astronaut, lang);
   const [selected, setSelected] = useState<ModuleKey[]>(readSelection);
   const [activeIndex, setActiveIndex] = useState<number>(0);
@@ -221,59 +226,77 @@ export function OverviewView({ astronaut, lang, onOpen }: Props) {
       list.push({
         key: "bone",
         spriteBase: "spt_hd",
-        title: "ARTEMIS · ALERTA OSTEOMUSCULAR",
-        bubble:
-          "¡Huesos dañados! Detecto desmineralización acelerada. Tócame para abrir el módulo de Densidad Ósea.",
-        sarcasm:
-          "Al ritmo que pierde calcio este astronauta, al volver a la Tierra va a crujir como bolsa de papitas. Máxima prioridad al ejercicio en máquina ARED.",
+        title: isEn
+          ? "ARTEMIS · MUSCULOSKELETAL ALERT"
+          : "ARTEMIS · ALERTA OSTEOMUSCULAR",
+        bubble: isEn
+          ? "Bone loss detected! Accelerated demineralization in progress. Click me to open the Bone Density module."
+          : "¡Huesos dañados! Detecto desmineralización acelerada. Tócame para abrir el módulo de Densidad Ósea.",
+        sarcasm: isEn
+          ? "At the rate this astronaut is losing calcium, they'll crunch like a bag of chips upon reentry. Top priority: ARED resistive exercise."
+          : "Al ritmo que pierde calcio este astronauta, al volver a la Tierra va a crujir como bolsa de papitas. Máxima prioridad al ejercicio en máquina ARED.",
       });
     }
     if (cSev >= 2) {
       list.push({
         key: "cortisol",
         spriteBase: "spt_me",
-        title: "ARTEMIS · ALERTA DE CORTISOL",
-        bubble:
-          "¡Mucho estrés a bordo :c! El pico de cortisol nocturno está saboteando el ritmo circadiano.",
-        sarcasm:
-          "Ese nivel de cortisol nocturno dice que duerme menos que interno de medicina en guardia de domingo. Prohibido el café liofilizado.",
+        title: isEn
+          ? "ARTEMIS · CORTISOL ALERT"
+          : "ARTEMIS · ALERTA DE CORTISOL",
+        bubble: isEn
+          ? "High stress on board :c! Nocturnal cortisol spikes are sabotaging the circadian rhythm."
+          : "¡Mucho estrés a bordo :c! El pico de cortisol nocturno está saboteando el ritmo circadiano.",
+        sarcasm: isEn
+          ? "That nocturnal cortisol spike says they're sleeping less than a medical intern on a Sunday shift. Freeze-dried coffee is officially banned."
+          : "Ese nivel de cortisol nocturno dice que duerme menos que interno de medicina en guardia de domingo. Prohibido el café liofilizado.",
       });
     }
     if (rSev >= 2) {
       list.push({
         key: "radiation",
         spriteBase: "spt_mr",
-        title: "ARTEMIS · ALERTA DOSIMÉTRICA",
-        bubble:
-          "¡Mucha radiación espacial! La tasa equivalente subió; revisa el blindaje y el acumulado.",
-        sarcasm:
-          "Dos tormentas solares más a esta dosis y el astronauta no va a necesitar linterna para leer de noche en la cúpula de la ISS.",
+        title: isEn
+          ? "ARTEMIS · DOSIMETRIC ALERT"
+          : "ARTEMIS · ALERTA DOSIMÉTRICA",
+        bubble: isEn
+          ? "High space radiation! Equivalent dose rate increased; review shielding and cumulative exposure."
+          : "¡Mucha radiación espacial! La tasa equivalente subió; revisa el blindaje y el acumulado.",
+        sarcasm: isEn
+          ? "Two more solar storms at this dose and the astronaut won't need a flashlight to read at night in the ISS Cupola."
+          : "Dos tormentas solares más a esta dosis y el astronauta no va a necesitar linterna para leer de noche en la cúpula de la ISS.",
       });
     }
     if (mSev >= 2) {
       list.push({
         key: "mental",
         spriteBase: "spt_nt",
-        title: "ARTEMIS · SOPORTE PSICOLÓGICO",
-        bubble:
-          "No estés triste :c. La carga alostática acumulada exige bajar el ritmo operativo de hoy.",
-        sarcasm:
-          "Ánimo por el piso y sobrecarga cognitiva: si le dan otra ración de comida espacial sin sal, va a pedir traslado a Neptuno.",
+        title: isEn
+          ? "ARTEMIS · PSYCHOLOGICAL SUPPORT"
+          : "ARTEMIS · SOPORTE PSICOLÓGICO",
+        bubble: isEn
+          ? "Don't be sad :c. Cumulative allostatic load requires lowering today's operational tempo."
+          : "No estés triste :c. La carga alostática acumulada exige bajar el ritmo operativo de hoy.",
+        sarcasm: isEn
+          ? "Rock-bottom morale and cognitive overload: one more salt-free space ration and they'll request a transfer to Neptune."
+          : "Ánimo por el piso y sobrecarga cognitiva: si le dan otra ración de comida espacial sin sal, va a pedir traslado a Neptuno.",
       });
     }
     if (list.length === 0) {
       list.push({
         key: "ok",
         spriteBase: "spt_bt",
-        title: "ARTEMIS · ESTADO NOMINAL",
-        bubble:
-          "¡Buen trabajo! Todos los biomarcadores del astronauta están en rango seguro.",
-        sarcasm:
-          "Signos vitales sospechosamente perfectos. O este astronauta es un cyborg, o desconectó los sensores para dormir hasta tarde.",
+        title: isEn ? "ARTEMIS · NOMINAL STATUS" : "ARTEMIS · ESTADO NOMINAL",
+        bubble: isEn
+          ? "Great job! All astronaut biomarkers are within safe operational range."
+          : "¡Buen trabajo! Todos los biomarcadores del astronauta están en rango seguro.",
+        sarcasm: isEn
+          ? "Suspiciously perfect vital signs. Either this astronaut is a cyborg, or they unplugged the sensors to sleep in."
+          : "Signos vitales sospechosamente perfectos. O este astronauta es un cyborg, o desconectó los sensores para dormir hasta tarde.",
       });
     }
     return list;
-  }, [bSev, cSev, rSev, mSev]);
+  }, [bSev, cSev, rSev, mSev, isEn]);
 
   useEffect(() => {
     setActiveIndex(0);
@@ -288,6 +311,7 @@ export function OverviewView({ astronaut, lang, onOpen }: Props) {
   }, [activeAlerts.length]);
 
   const currentArtemis = activeAlerts[activeIndex % activeAlerts.length];
+  const perMonthUnit = isEn ? "%/mo" : "%/mes";
 
   return (
     <div className="labquip-layout">
@@ -295,103 +319,108 @@ export function OverviewView({ astronaut, lang, onOpen }: Props) {
         <div className="labquip-hero-left">
           <div className="labquip-kicker">
             <span className="kicker-pulse-dot" />
-            <span>TELEMETRÍA BIOASTRONÁUTICA</span>
+            <span>
+              {isEn
+                ? "BIOASTRONAUTICS TELEMETRY AGENT"
+                : "AGENTE DE TELEMETRÍA BIOASTRONÁUTICA"}
+            </span>
           </div>
 
           <h1 className="labquip-giant-title">
-            <span className="solid-line">ASTRO HEALTH</span>
-            <span className="outline-line">MONITOR APP</span>
+            <span className="solid-line">ARTEMIS</span>
+            <span className="artemis-acronym-sub">
+              Aerospace Resilience, Telemetry, and Evaluation of Medical and
+              Internal Stress
+            </span>
           </h1>
 
-          <div className="bio-hud-layout">
-            <div className="bio-hud-stream">
-              <div className="bio-hud-meta">
-                <div className="bio-hud-subject-line">
-                  <span>
-                    SUJETO <b>{profile?.code ?? astronaut}</b>
-                  </span>
-                  {profile?.age !== null && profile?.age !== undefined && (
-                    <>
-                      <i className="hud-sep">//</i>
-                      <span>
-                        <b>{t("profile.age", { age: profile.age })}</b>
-                      </span>
-                    </>
-                  )}
-                  {profile?.sex && (
-                    <>
-                      <i className="hud-sep">//</i>
-                      <span>
-                        <b>{t(`sex.${profile.sex}`)}</b>
-                      </span>
-                    </>
-                  )}
-                </div>
-
-                <div className={`hud-alert-count s${worstSeverity}`}>
-                  <i
-                    className="fa-solid fa-triangle-exclamation"
-                    aria-hidden="true"
-                  />{" "}
-                  {attention > 0
-                    ? t("overview.attention", { count: attention })
-                    : t("overview.nominal")}
-                </div>
+          <div className="bio-hud-stream">
+            <div className="bio-hud-meta">
+              <div className="bio-hud-subject-line">
+                <span>
+                  {isEn ? "SUBJECT" : "SUJETO"}{" "}
+                  <b>{profile?.code ?? astronaut}</b>
+                </span>
+                {profile?.age !== null && profile?.age !== undefined && (
+                  <>
+                    <i className="hud-sep">//</i>
+                    <span>
+                      <b>{t("profile.age", { age: profile.age })}</b>
+                    </span>
+                  </>
+                )}
+                {profile?.sex && (
+                  <>
+                    <i className="hud-sep">//</i>
+                    <span>
+                      <b>{t(`sex.${profile.sex}`)}</b>
+                    </span>
+                  </>
+                )}
               </div>
 
-              <div className="bio-hud-counters">
-                <div>
-                  <small>PÉRDIDA ÓSEA</small>
-                  <strong>
-                    {boneData?.current
-                      ? `${fmt(boneData.current.cumulative_loss_pct, lang, 1)}%`
-                      : "—"}
-                  </strong>
-                  <span>
-                    {boneData?.current
-                      ? `${fmt(boneData.current.rate_pct_month, lang, 2)} %/mes`
-                      : ""}
-                  </span>
-                </div>
-                <div>
-                  <small>CORTISOL</small>
-                  <strong>
-                    {cortisolData?.current
-                      ? `${fmt(cortisolData.current.value_ug_dl, lang, 2)}`
-                      : "—"}
-                  </strong>
-                  <span>µg/dL</span>
-                </div>
-                <div>
-                  <small>RADIACIÓN</small>
-                  <strong>
-                    {radiationData?.current
-                      ? `${fmt(radiationData.current.eq_rate_usv_min, lang, 2)}`
-                      : "—"}
-                  </strong>
-                  <span>µSv/min</span>
-                </div>
-                <div>
-                  <small>CARGA MENTAL</small>
-                  <strong>
-                    {mentalData?.current_tlx
-                      ? `TLX ${fmt(mentalData.current_tlx.tlx, lang, 1)}`
-                      : "—"}
-                  </strong>
-                  <span>pts</span>
-                </div>
+              <div className={`hud-alert-count s${worstSeverity}`}>
+                <i
+                  className="fa-solid fa-triangle-exclamation"
+                  aria-hidden="true"
+                />{" "}
+                {attention > 0
+                  ? t("overview.attention", { count: attention })
+                  : t("overview.nominal")}
               </div>
-
-              <p key={currentArtemis.key} className="bio-hud-sarcasm">
-                <span>NOTA CLÍNICA DE ARTEMIS:</span> “{currentArtemis.sarcasm}”
-              </p>
             </div>
 
-            <BodyDiagnostic
-              bone={bSev}
-              radiation={rSev}
-              stress={Math.max(cSev, mSev)}
-            />
+            <div className="bio-hud-counters">
+              <div>
+                <small>{isEn ? "BONE LOSS" : "PÉRDIDA ÓSEA"}</small>
+                <strong>
+                  {boneData?.current
+                    ? `${fmt(boneData.current.cumulative_loss_pct, lang, 1)}%`
+                    : "—"}
+                </strong>
+                <span>
+                  {boneData?.current
+                    ? `${fmt(boneData.current.rate_pct_month, lang, 2)} ${perMonthUnit}`
+                    : ""}
+                </span>
+              </div>
+              <div>
+                <small>CORTISOL</small>
+                <strong>
+                  {cortisolData?.current
+                    ? `${fmt(cortisolData.current.value_ug_dl, lang, 2)}`
+                    : "—"}
+                </strong>
+                <span>µg/dL</span>
+              </div>
+              <div>
+                <small>{isEn ? "RADIATION" : "RADIACIÓN"}</small>
+                <strong>
+                  {radiationData?.current
+                    ? `${fmt(radiationData.current.eq_rate_usv_min, lang, 2)}`
+                    : "—"}
+                </strong>
+                <span>µSv/min</span>
+              </div>
+              <div>
+                <small>{isEn ? "MENTAL LOAD" : "CARGA MENTAL"}</small>
+                <strong>
+                  {mentalData?.current_tlx
+                    ? `TLX ${fmt(mentalData.current_tlx.tlx, lang, 1)}`
+                    : "—"}
+                </strong>
+                <span>pts</span>
+              </div>
+            </div>
+
+            <p key={currentArtemis.key} className="bio-hud-sarcasm">
+              <span>
+                {isEn
+                  ? "ARTEMIS CLINICAL NOTE:"
+                  : "NOTA CLÍNICA DE ARTEMIS:"}
+              </span>{" "}
+              “{currentArtemis.sarcasm}”
+            </p>
           </div>
 
           <div className="labquip-cta-row">
@@ -404,7 +433,8 @@ export function OverviewView({ astronaut, lang, onOpen }: Props) {
                 )
               }
             >
-              Inspeccionar módulo activo <span aria-hidden="true">→</span>
+              {isEn ? "INSPECT ACTIVE MODULE" : "Inspeccionar módulo activo"}{" "}
+              <span aria-hidden="true">→</span>
             </button>
           </div>
         </div>
@@ -417,7 +447,11 @@ export function OverviewView({ astronaut, lang, onOpen }: Props) {
             }
             role="button"
             tabIndex={0}
-            title="Haz clic en Artemis para abrir el módulo en alerta"
+            title={
+              isEn
+                ? "Click Artemis to open the active alert module"
+                : "Haz clic en Artemis para abrir el módulo en alerta"
+            }
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 onOpen(
@@ -429,6 +463,7 @@ export function OverviewView({ astronaut, lang, onOpen }: Props) {
             <ArtemisFloatingSprite
               spriteBase={currentArtemis.spriteBase}
               alt={currentArtemis.title}
+              isEn={isEn}
             />
           </div>
 
@@ -436,7 +471,9 @@ export function OverviewView({ astronaut, lang, onOpen }: Props) {
             <div
               className="artemis-orbit-dots"
               role="tablist"
-              aria-label="Alertas activas de Artemis"
+              aria-label={
+                isEn ? "Active Artemis alerts" : "Alertas activas de Artemis"
+              }
             >
               {activeAlerts.map((item, idx) => (
                 <button
@@ -466,7 +503,6 @@ export function OverviewView({ astronaut, lang, onOpen }: Props) {
         </div>
       </section>
 
-      {/* LEYENDA DISCRETA EN BLANCO DE LA IMAGEN CON HIPERVÍNCULO */}
       <div className="labquip-photo-credit">
         <a
           href="https://www.friendsofnasa.org/search?updated-max=2024-07-31T12:43:00-07:00&max-results=16&reverse-paginate=true&m=0&hl=es-ES"
@@ -479,7 +515,11 @@ export function OverviewView({ astronaut, lang, onOpen }: Props) {
 
       <div className="labquip-strip-header">
         <div className="labquip-strip-title">
-          <span>TELEMETRÍA MULTIPARAMÉTRICA · 4 NODOS ACTIVOS</span>
+          <span>
+            {isEn
+              ? "MULTIPARAMETRIC TELEMETRY · 4 ACTIVE NODES"
+              : "TELEMETRÍA MULTIPARAMÉTRICA · 4 NODOS ACTIVOS"}
+          </span>
         </div>
 
         <div
@@ -534,7 +574,7 @@ export function OverviewView({ astronaut, lang, onOpen }: Props) {
                 {
                   label: t("overview.metric.rate"),
                   value: boneData?.current
-                    ? `${fmt(boneData.current.rate_pct_month, lang, 2)} %/mes`
+                    ? `${fmt(boneData.current.rate_pct_month, lang, 2)} ${perMonthUnit}`
                     : "—",
                 },
                 {
@@ -599,7 +639,7 @@ export function OverviewView({ astronaut, lang, onOpen }: Props) {
                 {
                   label: "nmol/L",
                   value: cortisolData?.current
-                    ? fmt(cortisolData.current.value_nmol_l, lang, 1)
+                    ? fmt(cortisolData.current.value_ug_dl * 27.59, lang, 1)
                     : "—",
                 },
               ]}
@@ -717,7 +757,11 @@ export function OverviewView({ astronaut, lang, onOpen }: Props) {
       )}
 
       <footer className="labquip-bottom-credits">
-        <p className="labquip-initiative">iniciativa traída por: labquip</p>
+        <p className="labquip-initiative">
+          {isEn
+            ? "initiative brought to you by: labquip"
+            : "iniciativa traída por: labquip"}
+        </p>
         <p className="nasa-challenge-sub">NASA Space Apps Challenge</p>
       </footer>
     </div>
