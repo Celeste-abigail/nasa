@@ -49,6 +49,18 @@ Datos de ejemplo (opcional):
 mise run seed          # o: backend\.venv\Scripts\python.exe -m app.scripts.seed
 ```
 
+## Pantalla de inicio (Resumen)
+
+Al abrir la app se muestra la vista **Resumen**, con una tarjeta por módulo (DMO, cortisol,
+radiación y salud mental) que incluye el semáforo, la métrica principal, tres secundarias, la fecha
+del último dato y un sparkline. Cada tarjeta abre su módulo al hacer clic.
+
+- Chips para filtrar qué módulos ver (se recuerdan en `localStorage["nasa-space-summary"]`).
+- Un **estado general** muestra el peor semáforo y cuántos módulos requieren atención.
+- Los datos salen de las mismas consultas que cada vista (`monitoring`, `cortisol`, `radiation`,
+  `mental`), así que TanStack Query reutiliza la caché al entrar al detalle.
+- Si un módulo no tiene datos o su API falla, su tarjeta lo indica sin bloquear las demás.
+
 ## Arquitectura
 
 Screaming architecture: las carpetas nombran el **qué** (mediciones, monitoreo, astronautas), no el

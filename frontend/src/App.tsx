@@ -5,16 +5,20 @@ import { useTranslation } from "react-i18next";
 import { api } from "./lib/api";
 import type { Site } from "./lib/types";
 import { CortisolView } from "./modules/cortisol/CortisolView";
-import { ImportPanel } from "./modules/measurements/ImportPanel";import { ProfilePanel } from "./modules/measurements/ProfilePanel";
+import { ImportPanel } from "./modules/measurements/ImportPanel";
+import { ProfilePanel } from "./modules/measurements/ProfilePanel";
 import { RegisterPanel } from "./modules/measurements/RegisterPanel";
 import { HistoryTable } from "./modules/monitoring/HistoryTable";
 import { MentalView } from "./modules/mental/MentalView";
+import { OverviewView } from "./modules/overview/OverviewView";
 import { RecommendationsPanel } from "./modules/monitoring/RecommendationsPanel";
 import { RadiationView } from "./modules/radiation/RadiationView";
 import { StatusPanel } from "./modules/monitoring/StatusPanel";
 import { TrendChart } from "./modules/monitoring/TrendChart";
 import { Header } from "./modules/shell/Header";
 import { useToast } from "./modules/shell/Toast";
+
+type View = "overview" | "bone" | "cortisol" | "radiation" | "mental";
 
 export default function App() {
   const { t, i18n } = useTranslation();
@@ -24,16 +28,7 @@ export default function App() {
 
   const [astronaut, setAstronaut] = useState("");
   const [site, setSite] = useState<Site>("calcaneus");
-  const [view, setView] = useState<"bone" | "cortisol" | "radiation" | "mental">(() => {
-    const stored = localStorage.getItem("nasa-space-view");
-    return stored === "cortisol" || stored === "radiation" || stored === "mental"
-      ? stored
-      : "bone";
-  });
-
-  useEffect(() => {
-    localStorage.setItem("nasa-space-view", view);
-  }, [view]);
+  const [view, setView] = useState<View>("overview");
 
   const metaQuery = useQuery({
     queryKey: ["meta", lang],
@@ -84,7 +79,9 @@ export default function App() {
         onView={setView}
       />
 
-      {view === "cortisol" ? (
+      {view === "overview" ? (
+        <OverviewView astronaut={active} site={site} lang={lang} onOpen={setView} />
+      ) : view === "cortisol" ? (
         active ? (
           <CortisolView astronaut={active} lang={lang} onToast={show} />
         ) : (

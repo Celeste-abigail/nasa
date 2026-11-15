@@ -11,8 +11,8 @@ interface Props {
   lang: string;
   onLang: (lang: string) => void;
   modelVersion?: string;
-  view: "bone" | "cortisol" | "radiation" | "mental";
-  onView: (view: "bone" | "cortisol" | "radiation" | "mental") => void;
+  view: "overview" | "bone" | "cortisol" | "radiation" | "mental";
+  onView: (view: "overview" | "bone" | "cortisol" | "radiation" | "mental") => void;
 }
 
 export function Header({
@@ -32,6 +32,14 @@ export function Header({
   return (
     <header>
       <div className="view-tabs segmented" role="group" aria-label={t("app.title")}>
+        <button
+          type="button"
+          className={view === "overview" ? "on" : ""}
+          aria-pressed={view === "overview"}
+          onClick={() => onView("overview")}
+        >
+          {t("view.overview")}
+        </button>
         <button
           type="button"
           className={view === "bone" ? "on" : ""}

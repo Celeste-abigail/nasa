@@ -215,3 +215,12 @@ Si un shell no reconoce `bun`, abre una terminal nueva o usa `export PATH="$PATH
 - La dosis aguda de la zona roja es un campo manual opcional; no consulta el módulo de radiación.
 - Los umbrales viven en `mental.THRESHOLDS`; cambiarlos recalcula todo el histórico al leer.
 - `seed` carga 5 días de ejemplo para AST-01 y 2 para AST-02.
+
+## 15. Pantalla de Resumen
+
+- `frontend/src/modules/overview/`: `OverviewView` (composición), `SummaryCard` (tarjeta y
+  sparkline) y `useOverview` (las cuatro consultas con las query keys de cada módulo).
+- Severidad en `frontend/src/lib/severity.ts` (0–4) con test propio en `severity.test.ts`.
+- La app siempre arranca en `overview`; el filtro de tarjetas se guarda en
+  `localStorage["nasa-space-summary"]`.
+- No hay endpoint nuevo: el resumen reutiliza las cuatro APIs y su caché.
