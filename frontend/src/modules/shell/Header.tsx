@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
 import type { Astronaut, Site } from "../../lib/types";
@@ -25,14 +27,30 @@ export function Header({
   onSite,
   lang,
   onLang,
-  modelVersion,
   view,
   onView,
 }: Props) {
   const { t } = useTranslation();
+  const [siteHost, setSiteHost] = useState<Element | null>(null);
+
+  // Convierte el campo estático "SITIO" dentro de Densidad Ósea en un selector real
+  useEffect(() => {
+    if (view !== "bone") {
+      setSiteHost(null);
+      return;
+    }
+    const syncHost = () => {
+      const el = document.querySelector(".panel .static-value");
+      setSiteHost((prev) => (prev === el ? prev : el));
+    };
+    syncHost();
+    const observer = new MutationObserver(syncHost);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [view]);
 
   const tabs: Array<{ key: View; icon: string; label: string }> = [
-    { key: "overview", icon: "fa-gauge-high", label: t("view.overview") },
+    { key: "overview", icon: "fa-compass", label: t("view.overview") },
     { key: "bone", icon: "fa-bone", label: t("view.bone") },
     { key: "cortisol", icon: "fa-droplet", label: t("view.cortisol") },
     { key: "radiation", icon: "fa-radiation", label: t("view.radiation") },
@@ -40,65 +58,61 @@ export function Header({
   ];
 
   return (
-    <header>
-      <div className="brand">
-        <span className="brand-icon" aria-hidden="true">
-          <i className="fa-solid fa-rocket" />
-        </span>
-        <div>
-          <h1>Astro Health Monitor</h1>
-          <small>NASA SPACE · SCAN</small>
-        </div>
-      </div>
+    <>
+      <header className="neptuni-header">
+        <div className="neptuni-brand-wrap">
+          <button
+            type="button"
+            className="neptuni-badge-logo"
+            onClick={() => onView("overview")}
+          >
+            <i className="fa-solid fa-satellite" aria-hidden="true" />
+            <span>LABQUIP.SCAN</span>
+          </button>
 
-      <nav>
-        <div className="view-tabs" role="group" aria-label={t("app.title")}>
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              className={view === tab.key ? "on" : ""}
-              aria-pressed={view === tab.key}
-              onClick={() => onView(tab.key)}
+          <div className="neptuni-inline-controls">
+            <label className="sr-only" htmlFor="astronaut">
+              {t("header.astronaut")}
+            </label>
+            <select
+              id="astronaut"
+              className="compact-select"
+              value={astronaut}
+              onChange={(event) => onAstronaut(event.target.value)}
+              title={t("header.astronaut")}
             >
-              <i className={`fa-solid ${tab.icon}`} aria-hidden="true" />
-              {tab.label}
-            </button>
-          ))}
+              {astronauts.map((item) => (
+                <option key={item.code} value={item.code}>
+                  👨‍🚀 {item.code}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-      </nav>
 
-      <div className="header-controls">
-        <div className="toolbar-field">
-          <label htmlFor="astronaut">{t("header.astronaut")}</label>
-          <select
-            id="astronaut"
-            value={astronaut}
-            onChange={(event) => onAstronaut(event.target.value)}
+        <div className="neptuni-right-bar">
+          <nav className="neptuni-nav">
+            <div className="view-tabs" role="group" aria-label={t("app.title")}>
+              {tabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  className={view === tab.key ? "on" : ""}
+                  aria-pressed={view === tab.key}
+                  onClick={() => onView(tab.key)}
+                >
+                  <i className={`fa-solid ${tab.icon}`} aria-hidden="true" />
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </nav>
+
+          <div
+            className="compact-lang"
+            role="group"
+            aria-label={t("header.language")}
           >
-            {astronauts.map((item) => (
-              <option key={item.code} value={item.code}>
-                {item.code}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="toolbar-field">
-          <label htmlFor="site">{t("header.site")}</label>
-          <select
-            id="site"
-            value={site}
-            onChange={(event) => onSite(event.target.value as Site)}
-          >
-            <option value="calcaneus">{t("site.calcaneus")}</option>
-            <option value="femoral_neck">{t("site.femoral_neck")}</option>
-          </select>
-        </div>
-
-        <div className="toolbar-field lang">
-          <label>{t("header.language")}</label>
-          <div className="segmented" role="group" aria-label={t("header.language")}>
             <button
               type="button"
               className={lang === "es" ? "on" : ""}
@@ -117,11 +131,21 @@ export function Header({
             </button>
           </div>
         </div>
+      </header>
 
-        {modelVersion ? (
-          <p className="model-tag">{t("header.model", { version: modelVersion })}</p>
-        ) : null}
-      </div>
-    </header>
+      {siteHost &&
+        createPortal(
+          <select
+            id="bone-site-select"
+            value={site}
+            onChange={(event) => onSite(event.target.value as Site)}
+            aria-label={t("header.site")}
+          >
+            <option value="calcaneus">{t("site.calcaneus")}</option>
+            <option value="femoral_neck">{t("site.femoral_neck")}</option>
+          </select>,
+          siteHost
+        )}
+    </>
   );
 }

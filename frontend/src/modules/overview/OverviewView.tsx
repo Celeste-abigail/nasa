@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { fmt, formatDateTime } from "../../lib/format";
@@ -8,7 +8,6 @@ import {
   cortisolSeverity,
   mentalSeverity,
   radiationSeverity,
-  severityClass,
   worst,
   type ModuleKey,
 } from "../../lib/severity";
@@ -26,6 +25,14 @@ interface Props {
 const MODULES: ModuleKey[] = ["bone", "cortisol", "radiation", "mental"];
 const STORAGE_KEY = "nasa-space-summary";
 
+interface ArtemisState {
+  key: ModuleKey | "ok";
+  spriteBase: string;
+  title: string;
+  bubble: string;
+  sarcasm: string;
+}
+
 function readSelection(): ModuleKey[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -38,10 +45,155 @@ function readSelection(): ModuleKey[] {
   }
 }
 
+/**
+ * Estandariza las etiquetas de severidad en los 4 módulos para evitar
+ * mezclar colores ("Amarillo", "Naranja") con textos largos ("Alerta crítica").
+ */
+function standardBadge(sev: number, lang: string): string {
+  const isEn = lang.startsWith("en");
+  switch (sev) {
+    case 1:
+      return "NOMINAL";
+    case 2:
+      return isEn ? "CAUTION" : "PRECAUCIÓN";
+    case 3:
+      return isEn ? "WARNING" : "ALERTA";
+    case 4:
+      return isEn ? "CRITICAL" : "CRÍTICO";
+    default:
+      return isEn ? "NO DATA" : "SIN DATOS";
+  }
+}
+
+function ArtemisFloatingSprite({
+  spriteBase,
+  alt,
+}: {
+  spriteBase: string;
+  alt: string;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setFailed(false);
+
+    const candidates = [
+      `/sprites/${spriteBase}.png`,
+      `/sprites/${spriteBase}.jpg`,
+      `/${spriteBase}.png`,
+      `/${spriteBase}.jpg`,
+    ];
+
+    const tryLoad = (index: number) => {
+      if (cancelled) return;
+      if (index >= candidates.length) {
+        setFailed(true);
+        return;
+      }
+
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        if (cancelled) return;
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const w = img.naturalWidth;
+        const h = img.naturalHeight;
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+        ctx.clearRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0);
+
+        const imgData = ctx.getImageData(0, 0, w, h);
+        const data = imgData.data;
+        const visited = new Uint8Array(w * h);
+        const queue = new Int32Array(w * h);
+        let head = 0;
+        let tail = 0;
+
+        const isOuterDark = (idx: number) => {
+          const p = idx * 4;
+          return (
+            data[p + 3] > 0 &&
+            data[p] < 42 &&
+            data[p + 1] < 42 &&
+            data[p + 2] < 42
+          );
+        };
+
+        const push = (x: number, y: number) => {
+          if (x < 0 || x >= w || y < 0 || y >= h) return;
+          const idx = y * w + x;
+          if (visited[idx]) return;
+          if (isOuterDark(idx)) {
+            visited[idx] = 1;
+            queue[tail++] = idx;
+          }
+        };
+
+        for (let x = 0; x < w; x++) {
+          push(x, 0);
+          push(x, h - 1);
+        }
+        for (let y = 0; y < h; y++) {
+          push(0, y);
+          push(w - 1, y);
+        }
+
+        while (head < tail) {
+          const idx = queue[head++];
+          data[idx * 4 + 3] = 0;
+          const x = idx % w;
+          const y = (idx - x) / w;
+          push(x + 1, y);
+          push(x - 1, y);
+          push(x, y + 1);
+          push(x, y - 1);
+        }
+
+        ctx.putImageData(imgData, 0, 0);
+      };
+      img.onerror = () => tryLoad(index + 1);
+      img.src = candidates[index];
+    };
+
+    tryLoad(0);
+    return () => {
+      cancelled = true;
+    };
+  }, [spriteBase]);
+
+  if (failed) {
+    return (
+      <div className="sprite-missing">
+        Coloca <b>{spriteBase}.png</b> en <code>frontend/public/sprites/</code>
+      </div>
+    );
+  }
+
+  return (
+    <canvas
+      key={spriteBase}
+      ref={canvasRef}
+      className="artemis-floating-canvas artemis-pop-anim"
+      aria-label={alt}
+    />
+  );
+}
+
 export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
   const { t } = useTranslation();
-  const { bone, cortisol, radiation, mental } = useOverview(astronaut, site, lang);
+  const { bone, cortisol, radiation, mental } = useOverview(
+    astronaut,
+    site,
+    lang
+  );
   const [selected, setSelected] = useState<ModuleKey[]>(readSelection);
+  const [activeIndex, setActiveIndex] = useState<number>(0);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(selected));
@@ -50,7 +202,9 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
   function toggle(key: ModuleKey) {
     setSelected((current) => {
       if (current.includes(key)) {
-        return current.length === 1 ? current : current.filter((item) => item !== key);
+        return current.length === 1
+          ? current
+          : current.filter((item) => item !== key);
       }
       return MODULES.filter((item) => current.includes(item) || item === key);
     });
@@ -61,55 +215,296 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
   const radiationData = radiation.data;
   const mentalData = mental.data;
 
-  const severities = [
-    boneSeverity(boneData?.current?.level),
-    cortisolSeverity(cortisolData?.current?.color),
-    radiationSeverity(radiationData?.color),
-    mentalSeverity(mentalData?.current?.zone),
-  ];
+  const bSev = boneSeverity(boneData?.current?.level);
+  const cSev = cortisolSeverity(cortisolData?.current?.color);
+  const rSev = radiationSeverity(radiationData?.color);
+  const mSev = mentalSeverity(mentalData?.current?.zone);
+
+  const severities = [bSev, cSev, rSev, mSev];
   const worstSeverity = worst(severities);
   const attention = attentionCount(severities);
   const profile = boneData?.astronaut ?? mentalData?.astronaut ?? null;
 
-  return (
-    <div>
-      <div className="overview-status">
-        <span className={`badge ${severityClass(worstSeverity)}`}>
-          {t(`overview.severity.${worstSeverity}`)}
-        </span>
-        <span className="hint">
-          {attention > 0
-            ? t("overview.attention", { count: attention })
-            : t("overview.nominal")}
-        </span>
-        {profile && (
-          <span className="hint">
-            {profile.code}
-            {profile.age !== null ? ` · ${t("profile.age", { age: profile.age })}` : ""}
-            {profile.sex ? ` · ${t(`sex.${profile.sex}`)}` : ""}
-          </span>
-        )}
-      </div>
+  const activeAlerts = useMemo<ArtemisState[]>(() => {
+    const list: ArtemisState[] = [];
+    if (bSev >= 2) {
+      list.push({
+        key: "bone",
+        spriteBase: "spt_hd",
+        title: "ARTEMIS · ALERTA OSTEOMUSCULAR",
+        bubble:
+          "¡Huesos dañados! Detecto desmineralización acelerada. Tócame para abrir el módulo de Densidad Ósea.",
+        sarcasm:
+          "Al ritmo que pierde calcio este astronauta, al volver a la Tierra va a crujir como bolsa de papitas. Máxima prioridad al ejercicio en máquina ARED.",
+      });
+    }
+    if (cSev >= 2) {
+      list.push({
+        key: "cortisol",
+        spriteBase: "spt_me",
+        title: "ARTEMIS · ALERTA DE CORTISOL",
+        bubble:
+          "¡Mucho estrés a bordo :c! El pico de cortisol nocturno está saboteando el ritmo circadiano.",
+        sarcasm:
+          "Ese nivel de cortisol nocturno dice que duerme menos que interno de medicina en guardia de domingo. Prohibido el café liofilizado.",
+      });
+    }
+    if (rSev >= 2) {
+      list.push({
+        key: "radiation",
+        spriteBase: "spt_mr",
+        title: "ARTEMIS · ALERTA DOSIMÉTRICA",
+        bubble:
+          "¡Mucha radiación espacial! La tasa equivalente subió; revisa el blindaje y el acumulado.",
+        sarcasm:
+          "Dos tormentas solares más a esta dosis y el astronauta no va a necesitar linterna para leer de noche en la cúpula de la ISS.",
+      });
+    }
+    if (mSev >= 2) {
+      list.push({
+        key: "mental",
+        spriteBase: "spt_nt",
+        title: "ARTEMIS · SOPORTE PSICOLÓGICO",
+        bubble:
+          "No estés triste :c. La carga alostática acumulada exige bajar el ritmo operativo de hoy.",
+        sarcasm:
+          "Ánimo por el piso y sobrecarga cognitiva: si le dan otra ración de comida espacial sin sal, va a pedir traslado a Neptuno.",
+      });
+    }
+    if (list.length === 0) {
+      list.push({
+        key: "ok",
+        spriteBase: "spt_bt",
+        title: "ARTEMIS · ESTADO NOMINAL",
+        bubble:
+          "¡Buen trabajo! Todos los biomarcadores del astronauta están en rango seguro.",
+        sarcasm:
+          "Signos vitales sospechosamente perfectos. O este astronauta es un cyborg, o desconectó los sensores para dormir hasta tarde.",
+      });
+    }
+    return list;
+  }, [bSev, cSev, rSev, mSev]);
 
-      <div className="overview-chips" role="group" aria-label={t("overview.filter")}>
-        <button
-          type="button"
-          className={selected.length === MODULES.length ? "on" : ""}
-          onClick={() => setSelected(MODULES)}
-        >
-          {t("overview.all")}
-        </button>
-        {MODULES.map((key) => (
-          <button
-            key={key}
-            type="button"
-            className={selected.includes(key) ? "on" : ""}
-            aria-pressed={selected.includes(key)}
-            onClick={() => toggle(key)}
+  // Reinicia el índice al cambiar de astronauta
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [astronaut, activeAlerts.length]);
+
+  // Rotación automática cada 4.5 segundos si hay más de una alerta activa
+  useEffect(() => {
+    if (activeAlerts.length <= 1) return;
+    const timer = window.setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % activeAlerts.length);
+    }, 4500);
+    return () => window.clearInterval(timer);
+  }, [activeAlerts.length]);
+
+  const currentArtemis = activeAlerts[activeIndex % activeAlerts.length];
+
+  return (
+    <div className="neptuni-layout">
+      <section className="neptuni-hero">
+        <div className="neptuni-hero-left">
+          {/* 1. KICKER LIMPIO: SOLO TELEMETRÍA BIOASTRONÁUTICA */}
+          <div className="neptuni-kicker">
+            <span className="kicker-pulse-dot" />
+            <span>TELEMETRÍA BIOASTRONÁUTICA</span>
+          </div>
+
+          <h1 className="neptuni-giant-title">
+            <span className="solid-line">ASTRO HEALTH</span>
+            <span className="outline-line">MONITOR SCAN</span>
+          </h1>
+
+          {/* 2. HUD TELEMÉTRICO ABIERTO (SIN CAJAS DE IA) */}
+          <div className="bio-hud-stream">
+            <div className="bio-hud-meta">
+              <div className="bio-hud-subject-line">
+                <span>
+                  SUJETO <b>{profile?.code ?? astronaut}</b>
+                </span>
+                {profile?.age !== null && profile?.age !== undefined && (
+                  <>
+                    <i className="hud-sep">//</i>
+                    <span>
+                      <b>{t("profile.age", { age: profile.age })}</b>
+                    </span>
+                  </>
+                )}
+                {profile?.sex && (
+                  <>
+                    <i className="hud-sep">//</i>
+                    <span>
+                      <b>{t(`sex.${profile.sex}`)}</b>
+                    </span>
+                  </>
+                )}
+              </div>
+
+              <div className={`hud-alert-count s${worstSeverity}`}>
+                <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" />{" "}
+                {attention > 0
+                  ? t("overview.attention", { count: attention })
+                  : t("overview.nominal")}
+              </div>
+            </div>
+
+            <div className="bio-hud-counters">
+              <div>
+                <small>PÉRDIDA ÓSEA</small>
+                <strong>
+                  {boneData?.current
+                    ? `-${fmt(boneData.current.cumulative_loss_pct, lang, 1)}%`
+                    : "—"}
+                </strong>
+                <span>
+                  {boneData?.current
+                    ? `${fmt(boneData.current.rate_pct_month, lang, 2)} %/mes`
+                    : ""}
+                </span>
+              </div>
+              <div>
+                <small>CORTISOL</small>
+                <strong>
+                  {cortisolData?.current
+                    ? `${fmt(cortisolData.current.value_ug_dl, lang, 2)}`
+                    : "—"}
+                </strong>
+                <span>µg/dL</span>
+              </div>
+              <div>
+                <small>RADIACIÓN</small>
+                <strong>
+                  {radiationData?.current
+                    ? `${fmt(radiationData.current.eq_rate_usv_min, lang, 2)}`
+                    : "—"}
+                </strong>
+                <span>µSv/min</span>
+              </div>
+              <div>
+                <small>CARGA MENTAL</small>
+                <strong>
+                  {mentalData?.current
+                    ? `ALI ${fmt(mentalData.current.ali, lang, 1)}`
+                    : "—"}
+                </strong>
+                <span>pts</span>
+              </div>
+            </div>
+
+            {/* 5. COMENTARIO SARCÁSTICO / CÓMICO SEGÚN LAS ALERTAS */}
+            <p key={currentArtemis.key} className="bio-hud-sarcasm">
+              <span>NOTA CLÍNICA DE ARTEMIS:</span> “{currentArtemis.sarcasm}”
+            </p>
+          </div>
+
+          <div className="neptuni-cta-row">
+            <button
+              type="button"
+              className="neptuni-btn-primary"
+              onClick={() =>
+                onOpen(
+                  currentArtemis.key === "ok" ? "bone" : currentArtemis.key
+                )
+              }
+            >
+              Inspeccionar módulo activo <span aria-hidden="true">→</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 4. DERECHA: ARTEMIS CON ROTACIÓN AUTOMÁTICA DE ESTADOS */}
+        <div className="neptuni-hero-right">
+          <div
+            className="artemis-floating-stage"
+            onClick={() =>
+              onOpen(currentArtemis.key === "ok" ? "bone" : currentArtemis.key)
+            }
+            role="button"
+            tabIndex={0}
+            title="Haz clic en Artemis para abrir el módulo en alerta"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                onOpen(
+                  currentArtemis.key === "ok" ? "bone" : currentArtemis.key
+                );
+              }
+            }}
           >
-            {t(`view.${key}`)}
+            <ArtemisFloatingSprite
+              spriteBase={currentArtemis.spriteBase}
+              alt={currentArtemis.title}
+            />
+          </div>
+
+          {activeAlerts.length > 1 && (
+            <div
+              className="artemis-orbit-dots"
+              role="tablist"
+              aria-label="Alertas activas de Artemis"
+            >
+              {activeAlerts.map((item, idx) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  className={
+                    idx === activeIndex % activeAlerts.length ? "on" : ""
+                  }
+                  onClick={() => setActiveIndex(idx)}
+                  title={item.title}
+                />
+              ))}
+            </div>
+          )}
+
+          <div className="neptuni-mascot-bar">
+            <div key={currentArtemis.key} className="neptuni-speech-bubble">
+              <strong>
+                {currentArtemis.title}
+                {activeAlerts.length > 1
+                  ? ` · ${(activeIndex % activeAlerts.length) + 1}/${activeAlerts.length}`
+                  : ""}
+              </strong>
+              {currentArtemis.bubble}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* TIRA INFERIOR DE MÓDULOS */}
+      <div className="neptuni-strip-header">
+        <div className="neptuni-strip-title">
+          <span>TELEMETRÍA MULTIPARAMÉTRICA · 4 NODOS ACTIVOS</span>
+        </div>
+
+        <div
+          className="overview-chips"
+          role="group"
+          aria-label={t("overview.filter")}
+        >
+          <button
+            type="button"
+            className={selected.length === MODULES.length ? "on" : ""}
+            onClick={() => setSelected(MODULES)}
+          >
+            {t("overview.all")}
           </button>
-        ))}
+          {MODULES.map((key) => {
+            const isSoloOrFiltered =
+              selected.length < MODULES.length && selected.includes(key);
+            return (
+              <button
+                key={key}
+                type="button"
+                className={isSoloOrFiltered ? "on" : ""}
+                aria-pressed={selected.includes(key)}
+                onClick={() => toggle(key)}
+              >
+                {t(`view.${key}`)}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {!astronaut ? (
@@ -122,12 +517,8 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
             <SummaryCard
               title={t("view.bone")}
               icon="fa-bone"
-              severity={boneSeverity(boneData?.current?.level)}
-              badge={
-                boneData?.current
-                  ? boneData.current.level_name
-                  : t("overview.no_data")
-              }
+              severity={bSev}
+              badge={standardBadge(bSev, lang)}
               primary={
                 boneData?.current
                   ? fmt(boneData.current.cumulative_loss_pct, lang, 1)
@@ -173,12 +564,8 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
             <SummaryCard
               title={t("view.cortisol")}
               icon="fa-droplet"
-              severity={cortisolSeverity(cortisolData?.current?.color)}
-              badge={
-                cortisolData?.current
-                  ? t(`cortisol.color.${cortisolData.current.color}`)
-                  : t("overview.no_data")
-              }
+              severity={cSev}
+              badge={standardBadge(cSev, lang)}
               primary={
                 cortisolData?.current
                   ? fmt(cortisolData.current.value_ug_dl, lang, 2)
@@ -228,12 +615,8 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
             <SummaryCard
               title={t("view.radiation")}
               icon="fa-radiation"
-              severity={radiationSeverity(radiationData?.color)}
-              badge={
-                radiationData?.color
-                  ? t(`radiation.color.${radiationData.color}`)
-                  : t("overview.no_data")
-              }
+              severity={rSev}
+              badge={standardBadge(rSev, lang)}
               primary={
                 radiationData?.current
                   ? fmt(radiationData.current.eq_rate_usv_min, lang, 2)
@@ -244,7 +627,9 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
                 {
                   label: t("overview.metric.layer_a"),
                   value: radiationData
-                    ? t(`radiation.layer.status.${radiationData.layers.a.status}`)
+                    ? t(
+                        `radiation.layer.status.${radiationData.layers.a.status}`
+                      )
                     : "—",
                 },
                 {
@@ -265,7 +650,9 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
                   ? formatDateTime(radiationData.current.measured_at, lang)
                   : null
               }
-              spark={radiationData?.readings.map((reading) => reading.eq_rate_usv_min)}
+              spark={radiationData?.readings.map(
+                (reading) => reading.eq_rate_usv_min
+              )}
               onOpen={() => onOpen("radiation")}
               loading={radiation.isLoading}
               error={radiation.isError}
@@ -277,12 +664,8 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
             <SummaryCard
               title={t("view.mental")}
               icon="fa-brain"
-              severity={mentalSeverity(mentalData?.current?.zone)}
-              badge={
-                mentalData?.current
-                  ? t(`overview.zone.${mentalData.current.zone}`)
-                  : t("overview.no_data")
-              }
+              severity={mSev}
+              badge={standardBadge(mSev, lang)}
               primary={
                 mentalData?.current
                   ? `ALI ${fmt(mentalData.current.ali, lang, 1)}`
@@ -327,6 +710,11 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
           )}
         </div>
       )}
+
+      <footer className="labquip-bottom-credits">
+        <p className="labquip-initiative">iniciativa traída por: labquip</p>
+        <p className="nasa-challenge-sub">NASA Space Apps Challenge</p>
+      </footer>
     </div>
   );
 }
