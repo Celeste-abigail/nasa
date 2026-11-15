@@ -11,13 +11,11 @@ import {
   worst,
   type ModuleKey,
 } from "../../lib/severity";
-import type { Site } from "../../lib/types";
 import { SummaryCard } from "./SummaryCard";
 import { useOverview } from "./useOverview";
 
 interface Props {
   astronaut: string;
-  site: Site;
   lang: string;
   onOpen: (view: ModuleKey) => void;
 }
@@ -181,13 +179,9 @@ function ArtemisFloatingSprite({
   );
 }
 
-export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
+export function OverviewView({ astronaut, lang, onOpen }: Props) {
   const { t } = useTranslation();
-  const { bone, cortisol, radiation, mental } = useOverview(
-    astronaut,
-    site,
-    lang
-  );
+  const { bone, cortisol, radiation, mental } = useOverview(astronaut, lang);
   const [selected, setSelected] = useState<ModuleKey[]>(readSelection);
   const [activeIndex, setActiveIndex] = useState<number>(0);
 
@@ -509,6 +503,44 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
           })}
         </div>
       </div>
+
+      {astronaut ? (
+        <div className="downloads">
+        <span>{t("downloads.label")}</span>
+        <a
+          href={`/api/v1/astronauts/${encodeURIComponent(astronaut)}/export/summary.html?lang=${lang}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          <i className="fa-solid fa-file-lines" aria-hidden="true" />
+          {t("downloads.summary_html")}
+        </a>
+        <a
+          href={`/api/v1/astronauts/${encodeURIComponent(astronaut)}/export/summary.pdf?lang=${lang}`}
+        >
+          <i className="fa-solid fa-file-pdf" aria-hidden="true" />
+          {t("downloads.summary_pdf")}
+        </a>
+        <a
+          href={`/api/v1/astronauts/${encodeURIComponent(astronaut)}/export/summary.json?lang=${lang}`}
+        >
+          <i className="fa-solid fa-file-code" aria-hidden="true" />
+          {t("downloads.summary_json")}
+        </a>
+        <a
+          href={`/api/v1/astronauts/${encodeURIComponent(astronaut)}/export/data.csv?lang=${lang}`}
+        >
+          <i className="fa-solid fa-file-csv" aria-hidden="true" />
+          {t("downloads.data_csv")}
+        </a>
+        <a
+          href={`/api/v1/astronauts/${encodeURIComponent(astronaut)}/export/data.json?lang=${lang}`}
+        >
+          <i className="fa-solid fa-database" aria-hidden="true" />
+          {t("downloads.data_json")}
+        </a>
+        </div>
+      ) : null}
 
       {!astronaut ? (
         <section className="panel">

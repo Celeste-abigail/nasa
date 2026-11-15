@@ -16,6 +16,7 @@ export function RecommendationsPanel({ recommendation }: Props) {
       title={`${t("exercise.section")} · ${recommendation.title}`}
       items={recommendation.items}
       note={recommendation.disclaimer}
+      badge={t("exercise.level_badge", { level: recommendation.level })}
     />
   );
 }

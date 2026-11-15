@@ -1159,6 +1159,294 @@ td:last-child {
   padding: 10px 0;
 }
 
+/* --- campos temporales uniformes --- */
+.temporal-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.temporal-label label {
+  margin-bottom: 0;
+}
+
+.now-btn {
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.now-btn:hover {
+  color: var(--ink);
+  border-color: var(--accent);
+}
+
+.compact-crew {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.compact-crew:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+@media (max-width: 720px) {
+  .compact-crew span {
+    display: none;
+  }
+}
+
+/* --- descargas --- */
+.downloads {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.downloads span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.downloads a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.downloads a:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* --- modal de tripulacion --- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 7, 10, 0.72);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 50;
+}
+
+.modal {
+  width: min(720px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 22px;
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.modal-head h2 {
+  margin: 0;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+.icon-btn:hover {
+  color: var(--ink);
+  border-color: var(--accent);
+}
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.tabs button {
+  min-height: 34px;
+  border-radius: 999px;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+.tabs button.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.crew-list {
+  display: grid;
+  gap: 8px;
+}
+
+.crew-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.crew-row b {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.crew-row small {
+  color: var(--muted);
+}
+
+.crew-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.crew-actions button {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+
+.crew-actions .danger {
+  color: var(--bad);
+  border-color: var(--bad);
+}
+
+.crew-actions .danger:hover {
+  background: var(--bad-bg);
+}
+
+.crew-add {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.crew-add h3 {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.crew-error {
+  color: var(--bad);
+  font-size: 12px;
+  min-height: 1em;
+  margin: 8px 0 0;
+}
+
+.crew-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* --- recomendaciones mas visibles --- */
+.recommendation-panel {
+  background: var(--cb);
+  border: 1px solid var(--c);
+  border-left-width: 5px;
+  padding: 20px 22px;
+}
+
+.recommendation-panel .recommendation-head {
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.recommendation-panel .recommendation-head i {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--c);
+  font-size: 18px;
+}
+
+.recommendation-panel .recommendation-head h2 {
+  font-size: 17px;
+  letter-spacing: 0.08em;
+}
+
+.recommendation-panel .recommendation-badge {
+  margin-left: auto;
+}
+
+.recommendation-panel ul {
+  font-size: 14.5px;
+  gap: 8px;
+}
+
+.recommendation-panel li:first-child {
+  font-weight: 600;
+  color: var(--ink);
+}
+
 /* --- WIDGET DE LA TORTUGA (ESTILO MASCOTA labquip) --- */
 .turtle-companion {
   position: fixed;

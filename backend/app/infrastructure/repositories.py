@@ -13,11 +13,20 @@ from app.domain.models import (
     MentalDay,
     MentalTask,
     RadiationReading,
+    utcnow,
 )
 
 
-def list_astronauts(session: Session) -> list[Astronaut]:
-    return list(session.exec(select(Astronaut).order_by(Astronaut.code)).all())
+def list_astronauts(session: Session, include_archived: bool = False) -> list[Astronaut]:
+    stmt = select(Astronaut)
+    if not include_archived:
+        stmt = stmt.where(Astronaut.deleted_at.is_(None))
+    return list(session.exec(stmt.order_by(Astronaut.code)).all())
+
+
+def list_archived_astronauts(session: Session) -> list[Astronaut]:
+    stmt = select(Astronaut).where(Astronaut.deleted_at.is_not(None)).order_by(Astronaut.code)
+    return list(session.exec(stmt).all())
 
 
 def get_astronaut(session: Session, code: str) -> Astronaut | None:
@@ -32,6 +41,14 @@ def create_astronaut(
     birth_date: date | None = None,
 ) -> Astronaut:
     astronaut = Astronaut(code=code, name=name, sex=sex, birth_date=birth_date)
+    session.add(astronaut)
+    session.commit()
+    session.refresh(astronaut)
+    return astronaut
+
+
+def set_astronaut_archived(session: Session, astronaut: Astronaut, archived: bool) -> Astronaut:
+    astronaut.deleted_at = utcnow() if archived else None
     session.add(astronaut)
     session.commit()
     session.refresh(astronaut)

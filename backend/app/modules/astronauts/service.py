@@ -21,10 +21,37 @@ def list_all(session: Session) -> list[Astronaut]:
     return repositories.list_astronauts(session)
 
 
+def list_archived(session: Session) -> list[Astronaut]:
+    return repositories.list_archived_astronauts(session)
+
+
 def get_one(session: Session, code: str) -> Astronaut:
+    astronaut = repositories.get_astronaut(session, code)
+    if astronaut is None or astronaut.deleted_at is not None:
+        raise NotFoundError("error.not_found", code=code)
+    return astronaut
+
+
+def archive(session: Session, code: str) -> Astronaut:
     astronaut = repositories.get_astronaut(session, code)
     if astronaut is None:
         raise NotFoundError("error.not_found", code=code)
+    if astronaut.deleted_at is not None:
+        return astronaut
+    active = repositories.list_astronauts(session)
+    if len(active) <= 1:
+        raise ConflictError("error.last_astronaut")
+    repositories.set_astronaut_archived(session, astronaut, True)
+    events.bus.publish("astronaut.archived", {"astronaut_code": astronaut.code})
+    return astronaut
+
+
+def restore(session: Session, code: str) -> Astronaut:
+    astronaut = repositories.get_astronaut(session, code)
+    if astronaut is None:
+        raise NotFoundError("error.not_found", code=code)
+    repositories.set_astronaut_archived(session, astronaut, False)
+    events.bus.publish("astronaut.restored", {"astronaut_code": astronaut.code})
     return astronaut
 
 

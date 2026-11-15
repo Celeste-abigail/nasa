@@ -4,25 +4,18 @@ import { useTranslation } from "react-i18next";
 
 import { ApiError, api } from "../../lib/api";
 import { addDays, daysBetween, fmt, todayISO } from "../../lib/format";
-import type { MeasurementInput, Meta, Point, Site } from "../../lib/types";
+import type { MeasurementInput, Meta, Point } from "../../lib/types";
+import { TemporalField } from "../../components/TemporalField";
 
 interface Props {
   astronaut: string;
-  site: Site;
   meta: Meta;
   baselineDate: string | null;
   lastDate: string | null;
   onSaved: () => void;
 }
 
-export function RegisterPanel({
-  astronaut,
-  site,
-  meta,
-  baselineDate,
-  lastDate,
-  onSaved,
-}: Props) {
+export function RegisterPanel({ astronaut, meta, baselineDate, lastDate, onSaved }: Props) {
   const { t, i18n } = useTranslation();
   const lang = i18n.resolvedLanguage ?? "es";
 
@@ -30,7 +23,6 @@ export function RegisterPanel({
   const [date, setDate] = useState(() => (lastDate ? addDays(lastDate, 15) : todayISO()));
   const [bua, setBua] = useState("");
   const [uv, setUv] = useState("");
-  const [att, setAtt] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState<MeasurementInput | null>(null);
   const [preview, setPreview] = useState<Point | null>(null);
@@ -52,7 +44,6 @@ export function RegisterPanel({
   function parseDraft(): MeasurementInput | null {
     const buaValue = Number(bua.replace(",", "."));
     const uvValue = Number(uv.replace(",", "."));
-    const attValue = att.trim() === "" ? null : Number(att.replace(",", "."));
 
     if (!Number.isFinite(buaValue) || !(buaValue > limits.bua_min && buaValue < limits.bua_max)) {
       setError(
@@ -64,22 +55,20 @@ export function RegisterPanel({
       setError(t("register.error.uv", { min: limits.uv_min, max: limits.uv_max }));
       return null;
     }
-    if (
-      attValue !== null &&
-      (!Number.isFinite(attValue) || !(attValue > limits.att_min && attValue < limits.att_max))
-    ) {
-      setError(t("register.error.att", { min: limits.att_min, max: limits.att_max }));
-      return null;
-    }
 
-    return { measured_on: date, site, bua: buaValue, uv: uvValue, att: attValue };
+    return {
+      measured_on: date,
+      site: "calcaneus",
+      bua: buaValue,
+      uv: uvValue,
+      att: null,
+    };
   }
 
   function reset() {
     setStep(1);
     setBua("");
     setUv("");
-    setAtt("");
     setPreview(null);
     setDraft(null);
     setError(null);
@@ -151,19 +140,17 @@ export function RegisterPanel({
 
       {step === 1 && (
         <div>
-          <div className="field">
-            <label htmlFor="session-date">{t("register.date")}</label>
-            <input
-              id="session-date"
-              type="date"
-              value={date}
-              onChange={(event) => setDate(event.target.value)}
-            />
-            <p className="hint">{hint}</p>
-          </div>
+          <TemporalField
+            id="session-date"
+            label={t("register.date")}
+            mode="date"
+            value={date}
+            onChange={setDate}
+            hint={hint}
+          />
           <div className="field">
             <span className="label">{t("register.site_label")}</span>
-            <p className="static-value">{t(`site.${site}`)}</p>
+            <p className="static-value">{t("site.calcaneus")}</p>
           </div>
         </div>
       )}
@@ -200,24 +187,6 @@ export function RegisterPanel({
               <span>{meta.units.uv}</span>
             </div>
           </div>
-          <div className="field">
-            <label htmlFor="att">
-              {t("register.att")}{" "}
-              <span className="optional">({t("register.optional")})</span>
-            </label>
-            <div className="unit">
-              <input
-                id="att"
-                type="number"
-                step="0.01"
-                inputMode="decimal"
-                placeholder="52.00"
-                value={att}
-                onChange={(event) => setAtt(event.target.value)}
-              />
-              <span>{meta.units.att}</span>
-            </div>
-          </div>
         </div>
       )}
 
@@ -237,10 +206,6 @@ export function RegisterPanel({
             <dt>{t("register.review.uv")}</dt>
             <dd>
               {fmt(preview.uv, lang, 0)} {meta.units.uv}
-            </dd>
-            <dt>{t("register.review.att")}</dt>
-            <dd>
-              {preview.att === null ? "—" : `${fmt(preview.att, lang, 2)} ${meta.units.att}`}
             </dd>
             <dt>{t("register.review.bvtv")}</dt>
             <dd>{fmt(preview.bv_tv, lang, 3)}</dd>

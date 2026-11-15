@@ -34,7 +34,7 @@ def thresholds() -> bone.Thresholds:
 
 def ensure_astronaut(session: Session, code: str):
     astronaut = repositories.get_astronaut(session, code.upper())
-    if astronaut is None:
+    if astronaut is None or astronaut.deleted_at is not None:
         raise NotFoundError("error.not_found", code=code)
     return astronaut
 

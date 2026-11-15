@@ -1,14 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { api } from "../../lib/api";
-import type { Site } from "../../lib/types";
 
-export function useOverview(astronaut: string, site: Site, lang: string) {
+export function useOverview(astronaut: string, lang: string) {
   const enabled = astronaut !== "";
 
   const bone = useQuery({
-    queryKey: ["monitoring", astronaut, site, lang],
-    queryFn: () => api.monitoring(astronaut, site, lang),
+    queryKey: ["monitoring", astronaut, lang],
+    queryFn: () => api.monitoring(astronaut, "calcaneus", lang),
     enabled,
   });
 

@@ -74,6 +74,33 @@ export const api = {
 
   astronauts: (lang: string) => request<Astronaut[]>(`${BASE}/astronauts`, {}, lang),
 
+  archivedAstronauts: (lang: string) =>
+    request<Astronaut[]>(`${BASE}/astronauts/archived`, {}, lang),
+
+  createAstronaut: (
+    input: { code: string; name: string; sex: "male" | "female"; birth_date: string },
+    lang: string,
+  ) =>
+    request<Astronaut>(
+      `${BASE}/astronauts`,
+      { method: "POST", body: JSON.stringify(input) },
+      lang,
+    ),
+
+  archiveAstronaut: (code: string, lang: string) =>
+    request<Astronaut>(
+      `${BASE}/astronauts/${encodeURIComponent(code)}`,
+      { method: "DELETE" },
+      lang,
+    ),
+
+  restoreAstronaut: (code: string, lang: string) =>
+    request<Astronaut>(
+      `${BASE}/astronauts/${encodeURIComponent(code)}/restore`,
+      { method: "POST" },
+      lang,
+    ),
+
   updateAstronaut: (code: string, patch: AstronautPatch, lang: string) =>
     request<Astronaut>(
       `${BASE}/astronauts/${encodeURIComponent(code)}`,

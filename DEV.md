@@ -225,6 +225,19 @@ Si un shell no reconoce `bun`, abre una terminal nueva o usa `export PATH="$PATH
   `localStorage["nasa-space-summary"]`.
 - No hay endpoint nuevo: el resumen reutiliza las cuatro APIs y su caché.
 
+## 17. Tripulación, descargas y DMO simplificado
+
+- **Archivar** es un soft delete: `astronaut.deleted_at`; la migración lo agrega sola. Los
+  astronautas archivados se listan en `GET /astronauts/archived` y se recuperan con
+  `POST /astronauts/{code}/restore`. No se puede archivar el último activo.
+- **Descargas** en `/api/v1/astronauts/{code}/export/`: `summary.html`, `summary.pdf`
+  (reportlab), `summary.json`, `data.json` y `data.csv` (formato largo).
+- **Fechas**: `components/TemporalField.tsx` unifica los inputs (`date`/`datetime`, botón “Ahora”).
+  Radiación sigue en UTC.
+- **DMO**: la interfaz fija `calcaneus`; el formulario solo pide BUA y SOS. ATT se sigue aceptando
+  en la API y los imports antiguos, pero no se captura ni se muestra.
+- `reportlab` está en `pyproject.toml`; tras clonar, `uv sync` lo instala.
+
 ## 16. Recursos visuales
 
 - `frontend/public/space-bg.jpg`: fondo NASA de dominio público (ISS071E373018). Vite lo sirve en

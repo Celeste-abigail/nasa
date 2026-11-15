@@ -54,6 +54,11 @@ def _migrate_schema() -> None:
     statements = [
         ("astronaut", "sex", "ALTER TABLE astronaut ADD COLUMN sex VARCHAR(8)"),
         ("astronaut", "birth_date", "ALTER TABLE astronaut ADD COLUMN birth_date DATE"),
+        (
+            "astronaut",
+            "deleted_at",
+            "ALTER TABLE astronaut ADD COLUMN deleted_at DATETIME",
+        ),
     ]
     with engine.connect() as connection:
         for table, column, statement in statements:

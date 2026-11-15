@@ -35,9 +35,30 @@ def create_astronaut(
     return _out(astronaut)
 
 
+@router.get("/archived", response_model=list[AstronautOut])
+def list_archived(session: Session = Depends(get_session)) -> list[AstronautOut]:
+    return [_out(astronaut) for astronaut in service.list_archived(session)]
+
+
 @router.get("/{code}", response_model=AstronautOut)
 def get_astronaut(code: str, session: Session = Depends(get_session)) -> AstronautOut:
     return _out(service.get_one(session, code))
+
+
+@router.delete("/{code}", response_model=AstronautOut)
+def archive_astronaut(
+    code: str,
+    session: Session = Depends(get_session),
+) -> AstronautOut:
+    return _out(service.archive(session, code))
+
+
+@router.post("/{code}/restore", response_model=AstronautOut)
+def restore_astronaut(
+    code: str,
+    session: Session = Depends(get_session),
+) -> AstronautOut:
+    return _out(service.restore(session, code))
 
 
 @router.patch("/{code}", response_model=AstronautOut)

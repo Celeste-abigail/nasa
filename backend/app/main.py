@@ -56,6 +56,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     events.bus.subscribe("measurement.imported", monitoring_service.invalidate_cache)
     events.bus.subscribe("astronaut.created", monitoring_service.invalidate_cache)
     events.bus.subscribe("astronaut.updated", monitoring_service.invalidate_cache)
+    events.bus.subscribe("astronaut.archived", monitoring_service.invalidate_cache)
+    events.bus.subscribe("astronaut.restored", monitoring_service.invalidate_cache)
 
     yield
 

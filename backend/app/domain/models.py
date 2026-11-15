@@ -22,6 +22,8 @@ class Astronaut(SQLModel, table=True):
     # Perfil para la referencia poblacional. Nullable para no romper datos previos.
     sex: str | None = Field(default=None, sa_column=Column(String(8), nullable=True))
     birth_date: date | None = Field(default=None, sa_column=Column(Date, nullable=True))
+    # Archivado (soft delete): conserva todos los datos para poder restaurarlo.
+    deleted_at: datetime | None = Field(default=None, sa_column=Column(DateTime, nullable=True))
     created_at: datetime = Field(
         default_factory=utcnow,
         sa_column=Column(DateTime, nullable=False),

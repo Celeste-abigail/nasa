@@ -97,6 +97,7 @@ export function CortisolView({ astronaut, lang, onToast }: Props) {
             title={t("recommendations.cortisol.title")}
             items={recItems}
             note={t("recommendations.cortisol.note")}
+            badge={t(`cortisol.color.${recColor || 1}`)}
           />
         )}
 

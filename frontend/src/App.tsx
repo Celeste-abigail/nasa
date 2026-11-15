@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { api } from "./lib/api";
-import type { Site } from "./lib/types";
 import { CortisolView } from "./modules/cortisol/CortisolView";
+import { CrewManager } from "./modules/crew/CrewManager";
 import { ImportPanel } from "./modules/measurements/ImportPanel";
 import { ProfilePanel } from "./modules/measurements/ProfilePanel";
 import { RegisterPanel } from "./modules/measurements/RegisterPanel";
@@ -27,7 +27,7 @@ export default function App() {
   const { message, show } = useToast();
 
   const [astronaut, setAstronaut] = useState("");
-  const [site, setSite] = useState<Site>("calcaneus");
+  const [crewOpen, setCrewOpen] = useState(false);
   const [view, setView] = useState<View>(() => {
     const hash = window.location.hash.replace("#", "");
     return hash === "bone" || hash === "cortisol" || hash === "radiation" || hash === "mental"
@@ -57,8 +57,8 @@ export default function App() {
   const active = astronaut || astronauts[0]?.code || "";
 
   const assessmentQuery = useQuery({
-    queryKey: ["monitoring", active, site, lang],
-    queryFn: () => api.monitoring(active, site, lang),
+    queryKey: ["monitoring", active, lang],
+    queryFn: () => api.monitoring(active, "calcaneus", lang),
     enabled: active !== "",
   });
 
@@ -67,6 +67,15 @@ export default function App() {
       setAstronaut(astronauts[0].code);
     }
   }, [astronaut, astronauts]);
+
+  useEffect(() => {
+    if (
+      astronauts.length > 0 &&
+      !astronauts.some((item) => item.code === active)
+    ) {
+      setAstronaut(astronauts[0].code);
+    }
+  }, [active, astronauts]);
 
   const meta = metaQuery.data;
   const assessment = assessmentQuery.data;
@@ -83,13 +92,12 @@ export default function App() {
         astronauts={astronauts}
         astronaut={active}
         onAstronaut={setAstronaut}
-        site={site}
-        onSite={setSite}
         lang={lang}
         onLang={(next) => void i18n.changeLanguage(next)}
         modelVersion={meta?.model.version}
         view={view}
         onView={setView}
+        onCrew={() => setCrewOpen(true)}
       />
 
       {view !== "overview" && (
@@ -102,7 +110,7 @@ export default function App() {
       )}
 
       {view === "overview" ? (
-        <OverviewView astronaut={active} site={site} lang={lang} onOpen={setView} />
+        <OverviewView astronaut={active} lang={lang} onOpen={setView} />
       ) : view === "cortisol" ? (
         active ? (
           <CortisolView astronaut={active} lang={lang} onToast={show} />
@@ -146,9 +154,8 @@ export default function App() {
           <div className="column">
             {meta && (
               <RegisterPanel
-                key={`${active}-${site}`}
+                key={active}
                 astronaut={active}
-                site={site}
                 meta={meta}
                 baselineDate={assessment?.baseline?.measured_on ?? null}
                 lastDate={assessment?.points.at(-1)?.measured_on ?? null}
@@ -248,6 +255,15 @@ export default function App() {
       <div className={`toast ${message ? "show" : ""}`} role="status">
         {message}
       </div>
+
+      <CrewManager
+        open={crewOpen}
+        onClose={() => setCrewOpen(false)}
+        active={active}
+        onSelect={setAstronaut}
+        lang={lang}
+        onToast={show}
+      />
     </div>
   );
 }

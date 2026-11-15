@@ -27,7 +27,6 @@ export function HistoryTable({ points, lang }: Props) {
             <th>{t("table.month")}</th>
             <th>{t("table.bua")}</th>
             <th>{t("table.uv")}</th>
-            <th>{t("table.att")}</th>
             <th>{t("table.bvtv")}</th>
             <th>{t("table.zbua")}</th>
             <th>{t("table.zsos")}</th>
@@ -44,7 +43,6 @@ export function HistoryTable({ points, lang }: Props) {
               <td>{fmt(point.month, lang, 1)}</td>
               <td>{fmt(point.bua, lang, 2)}</td>
               <td>{fmt(point.uv, lang, 0)}</td>
-              <td>{point.att === null ? "—" : fmt(point.att, lang, 2)}</td>
               <td>{fmt(point.bv_tv, lang, 3)}</td>
               <td>{signed(point.bua_z, lang, 2)}</td>
               <td>{signed(point.sos_z, lang, 2)}</td>

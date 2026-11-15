@@ -3,21 +3,15 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { ApiError, api } from "../../lib/api";
+import { nowLocalInput } from "../../lib/time";
 import type { CortisolUnit, MissionPhase } from "../../lib/types";
+import { TemporalField } from "../../components/TemporalField";
 
 interface Props {
   astronaut: string;
   lang: string;
   onSaved: () => void;
   onToast: (message: string) => void;
-}
-
-function nowLocalInput(): string {
-  const now = new Date();
-  const pad = (value: number) => `${value}`.padStart(2, "0");
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(
-    now.getHours(),
-  )}:${pad(now.getMinutes())}`;
 }
 
 const MAX_UG_DL = 10;
@@ -73,16 +67,13 @@ export function CortisolForm({ astronaut, lang, onSaved, onToast }: Props) {
     <section className="panel" aria-labelledby="cortisol-form-title">
       <h2 id="cortisol-form-title">{t("cortisol.form.title")}</h2>
 
-      <div className="field">
-        <label htmlFor="cortisol-datetime">{t("cortisol.form.datetime")}</label>
-        <input
-          id="cortisol-datetime"
-          type="datetime-local"
-          value={measuredAt}
-          onChange={(event) => setMeasuredAt(event.target.value)}
-        />
-        <p className="hint">{t("cortisol.form.hint")}</p>
-      </div>
+      <TemporalField
+        id="cortisol-datetime"
+        label={t("cortisol.form.datetime")}
+        value={measuredAt}
+        onChange={setMeasuredAt}
+        hint={t("cortisol.form.hint")}
+      />
 
       <div className="row2">
         <div className="field">

@@ -4,21 +4,15 @@ import { useTranslation } from "react-i18next";
 
 import { ApiError, api } from "../../lib/api";
 import { fmt, formatDateTime } from "../../lib/format";
+import { nowUtcInput } from "../../lib/time";
 import type { RadiationAssessment, RadiationLayer, Region } from "../../lib/types";
 import { RecommendationPanel } from "../shell/RecommendationPanel";
+import { TemporalField } from "../../components/TemporalField";
 
 interface Props {
   astronaut: string;
   lang: string;
   onToast: (message: string) => void;
-}
-
-function nowUtcInput(): string {
-  const now = new Date();
-  const pad = (value: number) => `${value}`.padStart(2, "0");
-  return `${now.getUTCFullYear()}-${pad(now.getUTCMonth() + 1)}-${pad(
-    now.getUTCDate(),
-  )}T${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}`;
 }
 
 export function RadiationView({ astronaut, lang, onToast }: Props) {
@@ -101,15 +95,13 @@ export function RadiationView({ astronaut, lang, onToast }: Props) {
       <section className="panel" aria-labelledby="radiation-form-title">
         <h2 id="radiation-form-title">{t("radiation.form.title")}</h2>
 
-        <div className="field">
-          <label htmlFor="rad-datetime">{t("radiation.form.datetime")}</label>
-          <input
-            id="rad-datetime"
-            type="datetime-local"
-            value={measuredAt}
-            onChange={(event) => setMeasuredAt(event.target.value)}
-          />
-        </div>
+        <TemporalField
+          id="rad-datetime"
+          label={t("radiation.form.datetime")}
+          value={measuredAt}
+          onChange={setMeasuredAt}
+          utc
+        />
 
         <div className="row2">
           <div className="field">
@@ -336,6 +328,11 @@ export function RadiationView({ astronaut, lang, onToast }: Props) {
               title={t("recommendations.radiation.title")}
               items={recItems}
               note={t("recommendations.radiation.note")}
+              badge={
+                recColor
+                  ? t(`radiation.color.${recColor}`)
+                  : t("radiation.color.none")
+              }
             />
           )}
 

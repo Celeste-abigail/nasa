@@ -74,6 +74,16 @@ del último dato y un sparkline. Cada tarjeta abre su módulo al hacer clic.
 - **Fondo**: imagen de NASA de dominio público (ISS071E373018, Soyuz MS-25 silueteada sobre la
   Tierra), en `frontend/public/space-bg.jpg`.
 
+### Tripulación y descargas
+
+- **Tripulación**: botón en el header para añadir astronautas (código, nombre, sexo, nacimiento) y
+  archivarlos. El archivado es reversible: conserva todas las series y se restauran desde la
+  pestaña “Archivados”. Siempre debe quedar al menos un astronauta activo.
+- **Descargas por astronauta** (desde el Resumen):
+  - `summary.html` (imprimible), `summary.pdf` (reportlab) y `summary.json`;
+  - `data.json` (completo) y `data.csv` (un único CSV en formato largo
+    `module,recorded_at,metric,value,unit,flags,notes`).
+
 Los gráficos conservan su lógica; solo heredan los nuevos tokens de color.
 
 ## Arquitectura

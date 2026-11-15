@@ -6,6 +6,7 @@ import { ApiError, api } from "../../lib/api";
 import { fmt, todayISO } from "../../lib/format";
 import type { MentalAssessment, MentalDay, Mood, TlxMode } from "../../lib/types";
 import { RecommendationPanel } from "../shell/RecommendationPanel";
+import { TemporalField } from "../../components/TemporalField";
 
 interface Props {
   astronaut: string;
@@ -138,16 +139,14 @@ export function MentalView({ astronaut, lang, onToast }: Props) {
         <h2 id="mental-form-title">{t("mental.form.title")}</h2>
 
         <div className="row2">
-          <div className="field">
-            <label htmlFor="mental-day">{t("mental.form.day")}</label>
-            <input
-              id="mental-day"
-              type="date"
-              value={day}
-              max={todayISO()}
-              onChange={(event) => setDay(event.target.value)}
-            />
-          </div>
+          <TemporalField
+            id="mental-day"
+            label={t("mental.form.day")}
+            mode="date"
+            value={day}
+            max={todayISO()}
+            onChange={setDay}
+          />
           <div className="field">
             <label htmlFor="mental-mission">{t("mental.form.mission_day")}</label>
             <input
@@ -361,6 +360,7 @@ export function MentalView({ astronaut, lang, onToast }: Props) {
               t(`recommendations.mental.${data.current.zone}.2`),
             ]}
             note={t("recommendations.mental.note")}
+            badge={t(`overview.zone.${data.current.zone}`)}
           />
         )}
 

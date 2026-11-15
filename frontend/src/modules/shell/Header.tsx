@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
-import type { Astronaut, Site } from "../../lib/types";
+import type { Astronaut } from "../../lib/types";
 
 type View = "overview" | "bone" | "cortisol" | "radiation" | "mental";
 
@@ -10,43 +8,25 @@ interface Props {
   astronauts: Astronaut[];
   astronaut: string;
   onAstronaut: (code: string) => void;
-  site: Site;
-  onSite: (site: Site) => void;
   lang: string;
   onLang: (lang: string) => void;
   modelVersion?: string;
   view: View;
   onView: (view: View) => void;
+  onCrew: () => void;
 }
 
 export function Header({
   astronauts,
   astronaut,
   onAstronaut,
-  site,
-  onSite,
   lang,
   onLang,
   view,
   onView,
+  onCrew,
 }: Props) {
   const { t } = useTranslation();
-  const [siteHost, setSiteHost] = useState<Element | null>(null);
-
-  useEffect(() => {
-    if (view !== "bone") {
-      setSiteHost(null);
-      return;
-    }
-    const syncHost = () => {
-      const el = document.querySelector(".panel .static-value");
-      setSiteHost((prev) => (prev === el ? prev : el));
-    };
-    syncHost();
-    const observer = new MutationObserver(syncHost);
-    observer.observe(document.body, { childList: true, subtree: true });
-    return () => observer.disconnect();
-  }, [view]);
 
   const tabs: Array<{ key: View; icon: string; label: string }> = [
     { key: "overview", icon: "fa-compass", label: t("view.overview") },
@@ -111,6 +91,16 @@ export function Header({
             </div>
           </nav>
 
+          <button
+            type="button"
+            className="compact-crew"
+            onClick={onCrew}
+            title={t("crew.manage")}
+          >
+            <i className="fa-solid fa-users" aria-hidden="true" />
+            <span>{t("crew.manage")}</span>
+          </button>
+
           <div
             className="compact-lang"
             role="group"
@@ -135,20 +125,6 @@ export function Header({
           </div>
         </div>
       </header>
-
-      {siteHost &&
-        createPortal(
-          <select
-            id="bone-site-select"
-            value={site}
-            onChange={(event) => onSite(event.target.value as Site)}
-            aria-label={t("header.site")}
-          >
-            <option value="calcaneus">{t("site.calcaneus")}</option>
-            <option value="femoral_neck">{t("site.femoral_neck")}</option>
-          </select>,
-          siteHost
-        )}
     </>
   );
 }

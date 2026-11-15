@@ -5,9 +5,10 @@ interface Props {
   title: string;
   items: string[];
   note?: string | null;
+  badge?: string;
 }
 
-export function RecommendationPanel({ severity, title, items, note }: Props) {
+export function RecommendationPanel({ severity, title, items, note, badge }: Props) {
   const id = useId().replace(/[:]/g, "");
   const level = Math.max(0, Math.min(4, Math.round(severity)));
   const alert = level >= 2;
@@ -20,6 +21,7 @@ export function RecommendationPanel({ severity, title, items, note }: Props) {
           aria-hidden="true"
         />
         <h2 id={`rec-${id}`}>{title}</h2>
+        {badge ? <span className="badge recommendation-badge">{badge}</span> : null}
       </div>
       <ul>
         {items.map((item) => (
