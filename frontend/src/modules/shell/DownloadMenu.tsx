@@ -98,12 +98,11 @@ export function DownloadMenu({ astronaut, lang }: Props) {
         disabled={!astronaut}
         aria-haspopup="menu"
         aria-expanded={open}
-        onClick={() => setOpen((value) => !value)}
+        aria-label={t("downloads.button")}
         title={t("downloads.button")}
+        onClick={() => setOpen((value) => !value)}
       >
         <i className="fa-solid fa-download" aria-hidden="true" />
-        <span>{t("downloads.button")}</span>
-        <i className="fa-solid fa-chevron-down chevron" aria-hidden="true" />
       </button>
 
       {open && (
