@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { ApiError, api } from "../../lib/api";
 import { fmt, formatDateTime } from "../../lib/format";
 import type { RadiationAssessment, RadiationLayer, Region } from "../../lib/types";
+import { RecommendationPanel } from "../shell/RecommendationPanel";
 
 interface Props {
   astronaut: string;
@@ -81,6 +82,19 @@ export function RadiationView({ astronaut, lang, onToast }: Props) {
 
   const data = query.data;
   const layers = data ? (["a", "b", "c"] as const) : [];
+  const recColor = data?.color ?? 0;
+  const recItems =
+    recColor === 3
+      ? [
+          t("recommendations.radiation.3.1"),
+          t("recommendations.radiation.3.2"),
+          t("recommendations.radiation.3.3"),
+        ]
+      : recColor === 2
+        ? [t("recommendations.radiation.2.1"), t("recommendations.radiation.2.2")]
+        : recColor === 1
+          ? [t("recommendations.radiation.1.1"), t("recommendations.radiation.1.2")]
+          : [t("recommendations.radiation.0.1")];
 
   return (
     <div className="shell">
@@ -315,6 +329,15 @@ export function RadiationView({ astronaut, lang, onToast }: Props) {
           )}
 
           {data && <RadiationChart data={data} lang={lang} />}
+
+          {data && (
+            <RecommendationPanel
+              severity={recColor}
+              title={t("recommendations.radiation.title")}
+              items={recItems}
+              note={t("recommendations.radiation.note")}
+            />
+          )}
 
           <p className="hint">{t("radiation.disclaimer")}</p>
           {data && (

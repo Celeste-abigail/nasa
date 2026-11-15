@@ -121,6 +121,7 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
           {selected.includes("bone") && (
             <SummaryCard
               title={t("view.bone")}
+              icon="fa-bone"
               severity={boneSeverity(boneData?.current?.level)}
               badge={
                 boneData?.current
@@ -129,9 +130,10 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
               }
               primary={
                 boneData?.current
-                  ? `${fmt(boneData.current.cumulative_loss_pct, lang, 1)} %`
+                  ? fmt(boneData.current.cumulative_loss_pct, lang, 1)
                   : "—"
               }
+              unit="%"
               metrics={[
                 {
                   label: t("overview.metric.rate"),
@@ -170,6 +172,7 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
           {selected.includes("cortisol") && (
             <SummaryCard
               title={t("view.cortisol")}
+              icon="fa-droplet"
               severity={cortisolSeverity(cortisolData?.current?.color)}
               badge={
                 cortisolData?.current
@@ -178,9 +181,10 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
               }
               primary={
                 cortisolData?.current
-                  ? `${fmt(cortisolData.current.value_ug_dl, lang, 2)} µg/dL`
+                  ? fmt(cortisolData.current.value_ug_dl, lang, 2)
                   : "—"
               }
+              unit="µg/dL"
               metrics={[
                 {
                   label: t("overview.metric.band"),
@@ -223,6 +227,7 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
           {selected.includes("radiation") && (
             <SummaryCard
               title={t("view.radiation")}
+              icon="fa-radiation"
               severity={radiationSeverity(radiationData?.color)}
               badge={
                 radiationData?.color
@@ -231,9 +236,10 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
               }
               primary={
                 radiationData?.current
-                  ? `${fmt(radiationData.current.eq_rate_usv_min, lang, 2)} µSv/min`
+                  ? fmt(radiationData.current.eq_rate_usv_min, lang, 2)
                   : "—"
               }
+              unit="µSv/min"
               metrics={[
                 {
                   label: t("overview.metric.layer_a"),
@@ -270,10 +276,11 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
           {selected.includes("mental") && (
             <SummaryCard
               title={t("view.mental")}
+              icon="fa-brain"
               severity={mentalSeverity(mentalData?.current?.zone)}
               badge={
                 mentalData?.current
-                  ? t(`mental.zone.${mentalData.current.zone}`)
+                  ? t(`overview.zone.${mentalData.current.zone}`)
                   : t("overview.no_data")
               }
               primary={

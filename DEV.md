@@ -224,3 +224,13 @@ Si un shell no reconoce `bun`, abre una terminal nueva o usa `export PATH="$PATH
 - La app siempre arranca en `overview`; el filtro de tarjetas se guarda en
   `localStorage["nasa-space-summary"]`.
 - No hay endpoint nuevo: el resumen reutiliza las cuatro APIs y su caché.
+
+## 16. Recursos visuales
+
+- `frontend/public/space-bg.jpg`: fondo NASA de dominio público (ISS071E373018). Vite lo sirve en
+  `/space-bg.jpg` y el CSS lo cubre con un degradado para mantener contraste.
+- Google Fonts (Oswald, Inter, JetBrains Mono) y FontAwesome 6 se cargan por CDN en `index.html`;
+  sin internet caen a las fuentes del sistema y los iconos no se muestran.
+- La navegación por hash (`#bone`, `#cortisol`, `#radiation`, `#mental`) permite abrir una vista
+  directamente; sin hash arranca en Resumen.
+- Los gráficos no se modificaron: siguen usando `var(--ink)`, `var(--line)` y los colores de estado.

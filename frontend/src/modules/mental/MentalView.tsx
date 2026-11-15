@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { ApiError, api } from "../../lib/api";
 import { fmt, todayISO } from "../../lib/format";
 import type { MentalAssessment, MentalDay, Mood, TlxMode } from "../../lib/types";
+import { RecommendationPanel } from "../shell/RecommendationPanel";
 
 interface Props {
   astronaut: string;
@@ -350,6 +351,18 @@ export function MentalView({ astronaut, lang, onToast }: Props) {
         </div>
 
         {data && data.days.length > 0 && <MentalChart data={data} lang={lang} />}
+
+        {data?.current && (
+          <RecommendationPanel
+            severity={data.current.color}
+            title={t("recommendations.mental.title")}
+            items={[
+              t(`recommendations.mental.${data.current.zone}.1`),
+              t(`recommendations.mental.${data.current.zone}.2`),
+            ]}
+            note={t("recommendations.mental.note")}
+          />
+        )}
 
         {data && data.days.length > 0 && (
           <div>

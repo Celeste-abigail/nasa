@@ -61,6 +61,21 @@ del último dato y un sparkline. Cada tarjeta abre su módulo al hacer clic.
   `mental`), así que TanStack Query reutiliza la caché al entrar al detalle.
 - Si un módulo no tiene datos o su API falla, su tarjeta lo indica sin bloquear las demás.
 
+### Interfaz
+
+- **Paleta**: fondo espacial con overlay oscuro; paneles `#1e2126`, bordes `#333842`, texto `#ffffff`
+  y secundario `#a0aab5`; semáforo médico verde/amarillo/rojo en píldoras, bordes y recomendaciones.
+- **Tipografía**: Oswald (títulos en mayúsculas), Inter (texto) y JetBrains Mono (valores, tablas y
+  ejes), cargadas desde Google Fonts.
+- **Iconos**: FontAwesome 6 por CDN (`fa-bone`, `fa-droplet`, `fa-radiation`, `fa-brain`, etc.).
+- **Estructura**: cabecera con marca “ASTRO HEALTH MONITOR” y navegación a la derecha; resumen en
+  tarjetas con icono, valor grande, estado y mini gráfico; en cada vista detallada, botón
+  “← Volver al resumen”, gráfico original y panel de recomendaciones con icono de check/alerta.
+- **Fondo**: imagen de NASA de dominio público (ISS071E373018, Soyuz MS-25 silueteada sobre la
+  Tierra), en `frontend/public/space-bg.jpg`.
+
+Los gráficos conservan su lógica; solo heredan los nuevos tokens de color.
+
 ## Arquitectura
 
 Screaming architecture: las carpetas nombran el **qué** (mediciones, monitoreo, astronautas), no el

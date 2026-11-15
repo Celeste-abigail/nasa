@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 
 import type { Recommendation } from "../../lib/types";
+import { RecommendationPanel } from "../shell/RecommendationPanel";
 
 interface Props {
   recommendation: Recommendation;
@@ -10,16 +11,11 @@ export function RecommendationsPanel({ recommendation }: Props) {
   const { t } = useTranslation();
 
   return (
-    <div className={`recommendations l${recommendation.level}`}>
-      <h3>
-        {t("exercise.section")} · {recommendation.title}
-      </h3>
-      <ul>
-        {recommendation.items.map((item) => (
-          <li key={item}>{item}</li>
-        ))}
-      </ul>
-      <p className="hint">{recommendation.disclaimer}</p>
-    </div>
+    <RecommendationPanel
+      severity={recommendation.level}
+      title={`${t("exercise.section")} · ${recommendation.title}`}
+      items={recommendation.items}
+      note={recommendation.disclaimer}
+    />
   );
 }

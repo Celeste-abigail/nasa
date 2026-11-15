@@ -8,6 +8,7 @@ import { CortisolForm } from "./CortisolForm";
 import { CortisolHistory } from "./CortisolHistory";
 import { CortisolImport } from "./CortisolImport";
 import { CortisolResult } from "./CortisolResult";
+import { RecommendationPanel } from "../shell/RecommendationPanel";
 
 interface Props {
   astronaut: string;
@@ -27,6 +28,19 @@ export function CortisolView({ astronaut, lang, onToast }: Props) {
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["cortisol"] });
   const data = query.data;
+  const recColor = data?.current?.color ?? 0;
+  const recItems =
+    recColor === 3
+      ? [
+          t("recommendations.cortisol.3.1"),
+          t("recommendations.cortisol.3.2"),
+          t("recommendations.cortisol.3.3"),
+        ]
+      : recColor === 2
+        ? [t("recommendations.cortisol.2.1"), t("recommendations.cortisol.2.2")]
+        : recColor === 1
+          ? [t("recommendations.cortisol.1.1"), t("recommendations.cortisol.1.2")]
+          : [t("recommendations.cortisol.0.1")];
 
   return (
     <div className="shell">
@@ -68,16 +82,6 @@ export function CortisolView({ astronaut, lang, onToast }: Props) {
           )}
 
           {data?.current && <CortisolResult current={data.current} lang={lang} />}
-
-          {data && data.warnings.length > 0 && (
-            <div className="warnings" role="status">
-              <ul>
-                {data.warnings.map((warning) => (
-                  <li key={warning}>{warning}</li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
 
         {data && (
@@ -85,6 +89,15 @@ export function CortisolView({ astronaut, lang, onToast }: Props) {
             <h2>{t("cortisol.chart.x")}</h2>
             <CortisolChart curve={data.reference.curve} samples={data.samples} />
           </div>
+        )}
+
+        {data && (
+          <RecommendationPanel
+            severity={recColor}
+            title={t("recommendations.cortisol.title")}
+            items={recItems}
+            note={t("recommendations.cortisol.note")}
+          />
         )}
 
         {data && (
@@ -103,11 +116,11 @@ export function CortisolView({ astronaut, lang, onToast }: Props) {
 
             <div className="cortisol-card">
               <h3>
-                {t("cortisol.baseline.title", {
-                  band: data.personal_baseline
-                    ? t(`cortisol.band.${data.personal_baseline.band}`)
-                    : "",
-                })}
+                {data.personal_baseline
+                  ? t("cortisol.baseline.title", {
+                      band: t(`cortisol.band.${data.personal_baseline.band}`),
+                    })
+                  : t("cortisol.baseline.title_plain")}
               </h3>
               {data.personal_baseline ? (
                 <>
@@ -126,7 +139,7 @@ export function CortisolView({ astronaut, lang, onToast }: Props) {
                   )}
                 </>
               ) : (
-                <span>{t("cortisol.ratio.empty")}</span>
+                <span>{t("cortisol.baseline.empty")}</span>
               )}
             </div>
 

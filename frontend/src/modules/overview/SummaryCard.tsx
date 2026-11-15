@@ -5,9 +5,11 @@ import { severityClass, type Severity } from "../../lib/severity";
 
 interface Props {
   title: string;
+  icon: string;
   severity: Severity;
   badge: string;
   primary: string;
+  unit?: string;
   metrics: Array<{ label: string; value: ReactNode }>;
   updated?: string | null;
   spark?: number[];
@@ -47,9 +49,11 @@ function Sparkline({ values }: { values: number[] }) {
 
 export function SummaryCard({
   title,
+  icon,
   severity,
   badge,
   primary,
+  unit,
   metrics,
   updated,
   spark,
@@ -76,7 +80,12 @@ export function SummaryCard({
       }}
     >
       <div className="summary-head">
-        <span className="summary-title">{title}</span>
+        <div className="summary-heading">
+          <span className="summary-icon" aria-hidden="true">
+            <i className={`fa-solid ${icon}`} />
+          </span>
+          <span className="summary-title">{title}</span>
+        </div>
         <span className="badge">{badge}</span>
       </div>
 
@@ -85,7 +94,10 @@ export function SummaryCard({
 
       {!loading && !error && (
         <>
-          <div className="summary-primary">{empty ? "—" : primary}</div>
+          <div className="summary-primary">
+            {empty ? "—" : primary}
+            {!empty && unit ? <small>{unit}</small> : null}
+          </div>
 
           {empty ? (
             <p className="hint">{emptyLabel ?? t("overview.no_data")}</p>

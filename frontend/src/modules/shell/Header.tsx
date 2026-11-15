@@ -2,6 +2,8 @@ import { useTranslation } from "react-i18next";
 
 import type { Astronaut, Site } from "../../lib/types";
 
+type View = "overview" | "bone" | "cortisol" | "radiation" | "mental";
+
 interface Props {
   astronauts: Astronaut[];
   astronaut: string;
@@ -11,8 +13,8 @@ interface Props {
   lang: string;
   onLang: (lang: string) => void;
   modelVersion?: string;
-  view: "overview" | "bone" | "cortisol" | "radiation" | "mental";
-  onView: (view: "overview" | "bone" | "cortisol" | "radiation" | "mental") => void;
+  view: View;
+  onView: (view: View) => void;
 }
 
 export function Header({
@@ -29,57 +31,44 @@ export function Header({
 }: Props) {
   const { t } = useTranslation();
 
+  const tabs: Array<{ key: View; icon: string; label: string }> = [
+    { key: "overview", icon: "fa-gauge-high", label: t("view.overview") },
+    { key: "bone", icon: "fa-bone", label: t("view.bone") },
+    { key: "cortisol", icon: "fa-droplet", label: t("view.cortisol") },
+    { key: "radiation", icon: "fa-radiation", label: t("view.radiation") },
+    { key: "mental", icon: "fa-brain", label: t("view.mental") },
+  ];
+
   return (
     <header>
-      <div className="view-tabs segmented" role="group" aria-label={t("app.title")}>
-        <button
-          type="button"
-          className={view === "overview" ? "on" : ""}
-          aria-pressed={view === "overview"}
-          onClick={() => onView("overview")}
-        >
-          {t("view.overview")}
-        </button>
-        <button
-          type="button"
-          className={view === "bone" ? "on" : ""}
-          aria-pressed={view === "bone"}
-          onClick={() => onView("bone")}
-        >
-          {t("view.bone")}
-        </button>
-        <button
-          type="button"
-          className={view === "cortisol" ? "on" : ""}
-          aria-pressed={view === "cortisol"}
-          onClick={() => onView("cortisol")}
-        >
-          {t("view.cortisol")}
-        </button>
-        <button
-          type="button"
-          className={view === "radiation" ? "on" : ""}
-          aria-pressed={view === "radiation"}
-          onClick={() => onView("radiation")}
-        >
-          {t("view.radiation")}
-        </button>
-        <button
-          type="button"
-          className={view === "mental" ? "on" : ""}
-          aria-pressed={view === "mental"}
-          onClick={() => onView("mental")}
-        >
-          {t("view.mental")}
-        </button>
+      <div className="brand">
+        <span className="brand-icon" aria-hidden="true">
+          <i className="fa-solid fa-rocket" />
+        </span>
+        <div>
+          <h1>Astro Health Monitor</h1>
+          <small>NASA SPACE · SCAN</small>
+        </div>
       </div>
 
-      <h1>
-        {t("app.title")}
-        <small>{t("app.subtitle")}</small>
-      </h1>
+      <nav>
+        <div className="view-tabs" role="group" aria-label={t("app.title")}>
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              className={view === tab.key ? "on" : ""}
+              aria-pressed={view === tab.key}
+              onClick={() => onView(tab.key)}
+            >
+              <i className={`fa-solid ${tab.icon}`} aria-hidden="true" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </nav>
 
-      <div className="toolbar">
+      <div className="header-controls">
         <div className="toolbar-field">
           <label htmlFor="astronaut">{t("header.astronaut")}</label>
           <select
@@ -128,11 +117,11 @@ export function Header({
             </button>
           </div>
         </div>
-      </div>
 
-      {modelVersion ? (
-        <p className="model-tag">{t("header.model", { version: modelVersion })}</p>
-      ) : null}
+        {modelVersion ? (
+          <p className="model-tag">{t("header.model", { version: modelVersion })}</p>
+        ) : null}
+      </div>
     </header>
   );
 }
