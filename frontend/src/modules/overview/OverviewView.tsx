@@ -11,6 +11,7 @@ import {
   type ModuleKey,
 } from "../../lib/severity";
 import { SummaryCard } from "./SummaryCard";
+import { BodyDiagnostic } from "./BodyDiagnostic";
 import { useOverview } from "./useOverview";
 
 interface Props {
@@ -302,87 +303,95 @@ export function OverviewView({ astronaut, lang, onOpen }: Props) {
             <span className="outline-line">MONITOR APP</span>
           </h1>
 
-          <div className="bio-hud-stream">
-            <div className="bio-hud-meta">
-              <div className="bio-hud-subject-line">
-                <span>
-                  SUJETO <b>{profile?.code ?? astronaut}</b>
-                </span>
-                {profile?.age !== null && profile?.age !== undefined && (
-                  <>
-                    <i className="hud-sep">//</i>
-                    <span>
-                      <b>{t("profile.age", { age: profile.age })}</b>
-                    </span>
-                  </>
-                )}
-                {profile?.sex && (
-                  <>
-                    <i className="hud-sep">//</i>
-                    <span>
-                      <b>{t(`sex.${profile.sex}`)}</b>
-                    </span>
-                  </>
-                )}
+          <div className="bio-hud-layout">
+            <div className="bio-hud-stream">
+              <div className="bio-hud-meta">
+                <div className="bio-hud-subject-line">
+                  <span>
+                    SUJETO <b>{profile?.code ?? astronaut}</b>
+                  </span>
+                  {profile?.age !== null && profile?.age !== undefined && (
+                    <>
+                      <i className="hud-sep">//</i>
+                      <span>
+                        <b>{t("profile.age", { age: profile.age })}</b>
+                      </span>
+                    </>
+                  )}
+                  {profile?.sex && (
+                    <>
+                      <i className="hud-sep">//</i>
+                      <span>
+                        <b>{t(`sex.${profile.sex}`)}</b>
+                      </span>
+                    </>
+                  )}
+                </div>
+
+                <div className={`hud-alert-count s${worstSeverity}`}>
+                  <i
+                    className="fa-solid fa-triangle-exclamation"
+                    aria-hidden="true"
+                  />{" "}
+                  {attention > 0
+                    ? t("overview.attention", { count: attention })
+                    : t("overview.nominal")}
+                </div>
               </div>
 
-              <div className={`hud-alert-count s${worstSeverity}`}>
-                <i
-                  className="fa-solid fa-triangle-exclamation"
-                  aria-hidden="true"
-                />{" "}
-                {attention > 0
-                  ? t("overview.attention", { count: attention })
-                  : t("overview.nominal")}
+              <div className="bio-hud-counters">
+                <div>
+                  <small>PÉRDIDA ÓSEA</small>
+                  <strong>
+                    {boneData?.current
+                      ? `${fmt(boneData.current.cumulative_loss_pct, lang, 1)}%`
+                      : "—"}
+                  </strong>
+                  <span>
+                    {boneData?.current
+                      ? `${fmt(boneData.current.rate_pct_month, lang, 2)} %/mes`
+                      : ""}
+                  </span>
+                </div>
+                <div>
+                  <small>CORTISOL</small>
+                  <strong>
+                    {cortisolData?.current
+                      ? `${fmt(cortisolData.current.value_ug_dl, lang, 2)}`
+                      : "—"}
+                  </strong>
+                  <span>µg/dL</span>
+                </div>
+                <div>
+                  <small>RADIACIÓN</small>
+                  <strong>
+                    {radiationData?.current
+                      ? `${fmt(radiationData.current.eq_rate_usv_min, lang, 2)}`
+                      : "—"}
+                  </strong>
+                  <span>µSv/min</span>
+                </div>
+                <div>
+                  <small>CARGA MENTAL</small>
+                  <strong>
+                    {mentalData?.current_tlx
+                      ? `TLX ${fmt(mentalData.current_tlx.tlx, lang, 1)}`
+                      : "—"}
+                  </strong>
+                  <span>pts</span>
+                </div>
               </div>
+
+              <p key={currentArtemis.key} className="bio-hud-sarcasm">
+                <span>NOTA CLÍNICA DE ARTEMIS:</span> “{currentArtemis.sarcasm}”
+              </p>
             </div>
 
-            <div className="bio-hud-counters">
-              <div>
-                <small>PÉRDIDA ÓSEA</small>
-                <strong>
-                  {boneData?.current
-                    ? `${fmt(boneData.current.cumulative_loss_pct, lang, 1)}%`
-                    : "—"}
-                </strong>
-                <span>
-                  {boneData?.current
-                    ? `${fmt(boneData.current.rate_pct_month, lang, 2)} %/mes`
-                    : ""}
-                </span>
-              </div>
-              <div>
-                <small>CORTISOL</small>
-                <strong>
-                  {cortisolData?.current
-                    ? `${fmt(cortisolData.current.value_ug_dl, lang, 2)}`
-                    : "—"}
-                </strong>
-                <span>µg/dL</span>
-              </div>
-              <div>
-                <small>RADIACIÓN</small>
-                <strong>
-                  {radiationData?.current
-                    ? `${fmt(radiationData.current.eq_rate_usv_min, lang, 2)}`
-                    : "—"}
-                </strong>
-                <span>µSv/min</span>
-              </div>
-              <div>
-                <small>CARGA MENTAL</small>
-                <strong>
-                  {mentalData?.current_tlx
-                    ? `TLX ${fmt(mentalData.current_tlx.tlx, lang, 1)}`
-                    : "—"}
-                </strong>
-                <span>pts</span>
-              </div>
-            </div>
-
-            <p key={currentArtemis.key} className="bio-hud-sarcasm">
-              <span>NOTA CLÍNICA DE ARTEMIS:</span> “{currentArtemis.sarcasm}”
-            </p>
+            <BodyDiagnostic
+              bone={bSev}
+              radiation={rSev}
+              stress={Math.max(cSev, mSev)}
+            />
           </div>
 
           <div className="labquip-cta-row">

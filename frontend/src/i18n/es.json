@@ -593,5 +593,13 @@
   "overview.metric.iad": "IAD",
   "overview.metric.tst": "Sueno",
   "overview.metric.pvt": "PVT",
-  "overview.metric.prescriptions": "Recomendaciones"
+  "overview.metric.prescriptions": "Recomendaciones",
+  "overview.body.normal": "Escaneo normal",
+  "overview.body.watch": "Vigilancia",
+  "overview.body.critical": "Alerta critica",
+  "overview.body.bone": "Oseo",
+  "overview.body.radiation": "Radiacion",
+  "overview.body.stress": "Estres",
+  "overview.body.none": "sin sistemas alterados",
+  "overview.body.aria": "Diagnostico visual: {{status}}. Sistemas: {{systems}}."
 }
