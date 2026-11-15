@@ -28,7 +28,20 @@ export default function App() {
 
   const [astronaut, setAstronaut] = useState("");
   const [site, setSite] = useState<Site>("calcaneus");
-  const [view, setView] = useState<View>("overview");
+  const [view, setView] = useState<View>(() => {
+    const hash = window.location.hash.replace("#", "");
+    return hash === "bone" || hash === "cortisol" || hash === "radiation" || hash === "mental"
+      ? hash
+      : "overview";
+  });
+
+  useEffect(() => {
+    const target = view === "overview" ? "" : `#${view}`;
+    const current = window.location.hash;
+    if (current !== target) {
+      history.replaceState(null, "", `${window.location.pathname}${window.location.search}${target}`);
+    }
+  }, [view]);
 
   const metaQuery = useQuery({
     queryKey: ["meta", lang],
@@ -78,6 +91,15 @@ export default function App() {
         view={view}
         onView={setView}
       />
+
+      {view !== "overview" && (
+        <div className="detail-bar">
+          <button type="button" className="back-btn" onClick={() => setView("overview")}>
+            <i className="fa-solid fa-arrow-left" aria-hidden="true" />
+            {t("overview.back")}
+          </button>
+        </div>
+      )}
 
       {view === "overview" ? (
         <OverviewView astronaut={active} site={site} lang={lang} onOpen={setView} />
@@ -167,9 +189,6 @@ export default function App() {
                 warnings={assessment?.warnings ?? []}
                 lang={lang}
               />
-              {assessment && (
-                <RecommendationsPanel recommendation={assessment.recommendations} />
-              )}
             </div>
 
             <div>
@@ -202,6 +221,10 @@ export default function App() {
                 lang={lang}
               />
             </div>
+
+            {assessment && (
+              <RecommendationsPanel recommendation={assessment.recommendations} />
+            )}
 
             <div>
               <h2>{t("table.title")}</h2>
