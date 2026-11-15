@@ -1,170 +1,163 @@
-﻿# NASA SPACE · Monitoreo óseo SCAN
+# A.R.T.E.M.I.S. · Aerospace Resilience, Telemetry, and Evaluation of Medical and Internal Stress
 
-Sistema local de seguimiento de densidad ósea para misiones espaciales de larga duración.
-Implementa el método **SCAN** (Scanning Confocal Acoustic Navigation): captura **BUA**, **UV** y
-**ATT**, estima **BV/TV** con la regresión publicada, calcula la tendencia de pérdida frente a la
-línea base y clasifica el riesgo en tres niveles.
+> **Desarrollado por LABQUIP (`LABQUIP.APP`) — NASA Space Apps Challenge**  
+> *Agente autónomo de evaluación biomédica, telemetría multiparamétrica y soporte vital predictivo para misiones espaciales de larga duración y poblaciones vulnerables en la Tierra.*
 
-El proyecto está diseñado como plataforma de salud del astronauta con cuatro módulos independientes:
-densidad ósea (SCAN), cortisol salival, radiación (TEPC) y salud mental (TLX, CDA, sueño y PVT). Cada uno
-tiene su propia fuente de datos y su propia tabla; el núcleo compartido es el perfil del astronauta
-y el motor de alertas.
+---
+
+## Resumen Ejecutivo y Propuesta de Valor
+
+En misiones de espacio profundo (programa Artemis y tránsito marciano), el retraso en las comunicaciones y la carga cognitiva impiden que la tripulación interprete tablas clínicas crudas. **A.R.T.E.M.I.S.** transforma datos fisiológicos dispersos en un flujo de triaje autónomo:
 
 ```
-plan -> medir -> evaluar -> alertar -> registrar
+planificar -> medir -> evaluar -> predecir -> prescribir -> exportar
 ```
 
-## Stack
+1. **Monitoreo Multiparamétrico Integrado (4 Nodos Activos):** Evalúa en tiempo real la **desmineralización ósea** (método acústico confocal SCAN: BUA, UV/SOS, ATT y predicción de BV/TV), el **estrés neuroendocrino** (cortisol salival circadiano CLIA/ECLIA), el **estrés dosimétrico** (radiación ambiental TEPC en capas A/B/C) y la **carga alostática / salud mental** (NASA-TLX, DMRS/CDA, arquitectura de sueño y PVT-B).
+2. **Interfaz Biomimética y Triaje Empático:** A.R.T.E.M.I.S. (representada por una tortuga marina espacial) actúa como agente de alerta temprana que traduce desviaciones matemáticas complejas en estados operativos inmediatos (`NOMINAL`, `PRECAUCIÓN`, `ALERTA`, `CRÍTICO`), reduciendo la fatiga de decisión del astronauta y del médico de vuelo.
+3. **Doble Impacto (Espacio + Extrapolación Terrestre):**
+   - **Investigación Científica (Big Data):** Exportación masiva estandarizada (`CSV` en formato largo, `JSON`, `PDF` y `HTML`) lista para alimentar pipelines bioinformáticos y estudios longitudinales.
+   - **Despliegue Clínico en la Tierra:** El motor predictivo y las tablas poblacionales integradas permiten utilizar la plataforma directamente en entornos hospitalarios y geriátricos terrestres para el tamizaje preventivo de **osteopenia, osteoporosis y síndrome de fragilidad** en adultos mayores.
+
+---
+
+## Stack Tecnológico
 
 | Capa | Tecnología | Motivo |
 | --- | --- | --- |
-| Toolchain | **mise** (node 24, python 3.13, uv, bun) | una sola versión reproducible, sin admin |
-| Backend | **FastAPI + SQLModel + SQLite** | validación, OpenAPI y archivo `.db` local |
-| Ciencia | **Python puro** (numpy no requerido) | dominio testeable y determinista |
-| Frontend | **React 19 + TypeScript + Vite** | componentes por función, tipado estricto |
-| Datos remotos | **TanStack Query** | cache, invalidación y estados de carga |
-| i18n | **react-i18next** + catálogos del backend | solo `es` y `en` |
-| Runtime dev | **bun** | instalación rápida y `bun run dev` |
+| Toolchain | **mise** (node 24, python 3.13, uv, bun) | una sola versión reproducible, sin permisos de administrador |
+| Backend | **FastAPI + SQLModel + SQLite** | validación estricta, OpenAPI y persistencia `.db` local |
+| Ciencia | **Python puro** (sin dependencias pesadas) | dominio biomédico testeable, auditable y 100 % determinista |
+| Frontend | **React 19 + TypeScript + Vite** | arquitectura modular por dominio y tipado estricto |
+| Datos remotos | **TanStack Query** | caché reactiva, invalidación automática y estados de carga |
+| i18n | **react-i18next** + catálogos del backend | soporte bilingüe completo (`es` y `en`) en tiempo real |
+| Runtime dev | **bun** | instalación ultrarrápida y ejecución concurrente `bun run dev` |
 
-Sin nube, sin dominio, sin contenedores obligatorios: todo corre en la máquina.
+Sin dependencia obligatoria de nube ni contenedores pesados: toda la telemetría corre localmente con latencia cero, apta para entornos aislados en órbita o clínicas rurales en la Tierra.
 
-## Inicio rápido
+---
+
+## Inicio Rápido
 
 Requisitos: Windows 10/11 (probado), `mise` y `bun`.
 
 ```powershell
 winget install --id jdx.mise -e
-# nueva terminal para que mise entre al PATH
+# abrir nueva terminal para que mise entre al PATH
 bun run setup          # mise install + uv sync + bun install
-bun run dev            # API + web con recarga en vivo
+bun run dev            # levanta API + interfaz web con recarga en vivo
 ```
 
-- Web: <http://127.0.0.1:5173>
-- API/Swagger: <http://127.0.0.1:8000/docs>
-- Health: <http://127.0.0.1:8000/api/health>
+- **Consola Web (`LABQUIP.APP`)**: <http://127.0.0.1:5173>
+- **API / Swagger Docs**: <http://127.0.0.1:8000/docs>
+- **Healthcheck**: <http://127.0.0.1:8000/api/health>
 
-Datos de ejemplo (opcional):
+Cargar telemetría simulada y perfiles de prueba (opcional):
 
 ```powershell
 mise run seed          # o: backend\.venv\Scripts\python.exe -m app.scripts.seed
 ```
 
-## Pantalla de inicio (Resumen)
+---
 
-Al abrir la app se muestra la vista **Resumen**, con una tarjeta por módulo (DMO, cortisol,
-radiación y salud mental) que incluye el semáforo, la métrica principal, tres secundarias, la fecha
-del último dato y un sparkline. Cada tarjeta abre su módulo al hacer clic.
+## Experiencia de Usuario e Interfaz Biomimética (`ASTRO HEALTH MONITOR APP`)
 
-- Chips para filtrar qué módulos ver (se recuerdan en `localStorage["nasa-space-summary"]`).
-- Un **estado general** muestra el peor semáforo y cuántos módulos requieren atención.
-- Los datos salen de las mismas consultas que cada vista (`monitoring`, `cortisol`, `radiation`,
-  `mental`), así que TanStack Query reutiliza la caché al entrar al detalle.
-- Si un módulo no tiene datos o su API falla, su tarjeta lo indica sin bloquear las demás.
+Al abrir la plataforma se despliega el centro de comando **Resumen**, que consolida el estado del astronauta activo junto al agente **A.R.T.E.M.I.S.** y cuatro tarjetas de telemetría (Densidad Ósea, Cortisol, Radiación y Salud Mental) con su estado operativo, métrica primaria, indicadores secundarios, fecha de actualización y curva de tendencia (*sparkline*).
 
-### Interfaz
+- **Filtros rápidos por nodo**: chips interactivos persistidos en `localStorage["nasa-space-summary"]`.
+- **HUD de Estado General**: resume los contadores críticos del sujeto activo, el número de módulos que requieren intervención y la nota clínica contextual de A.R.T.E.M.I.S.
+- **Sincronización de Caché**: TanStack Query reutiliza las consultas de `monitoring`, `cortisol`, `radiation` y `mental` al navegar hacia cada módulo detallado.
+- **Tolerancia a Fallos**: si un sensor o módulo aún no registra lecturas, su tarjeta lo reporta de forma aislada sin bloquear el resto de la consola.
 
-- **Paleta**: fondo espacial con overlay oscuro; paneles `#1e2126`, bordes `#333842`, texto `#ffffff`
-  y secundario `#a0aab5`; semáforo médico verde/amarillo/rojo en píldoras, bordes y recomendaciones.
-- **Tipografía**: Oswald (títulos en mayúsculas), Inter (texto) y JetBrains Mono (valores, tablas y
-  ejes), cargadas desde Google Fonts.
-- **Iconos**: FontAwesome 6 por CDN (`fa-bone`, `fa-droplet`, `fa-radiation`, `fa-brain`, etc.).
-- **Estructura**: cabecera con marca “ASTRO HEALTH MONITOR” y navegación a la derecha; resumen en
-  tarjetas con icono, valor grande, estado y mini gráfico; en cada vista detallada, botón
-  “← Volver al resumen”, gráfico original y panel de recomendaciones con icono de check/alerta.
-- **Fondo**: imagen de NASA de dominio público (ISS071E373018, Soyuz MS-25 silueteada sobre la
-  Tierra), en `frontend/public/space-bg.jpg`.
+### Identidad Visual y Diseño Biomimético
 
-### Tripulación y descargas
+- **Blindaje Teselado Voronoi (Biomímesis)**: los contenedores principales incorporan en su vértice superior derecho un patrón vectorial inspirado en el desprendimiento de placas cefálicas de tortuga marina (*Chelonia mydas*), fusionado con cortes geométricos biselados a 45° en tarjetas, pestañas y controles.
+- **Paleta Abisal-Nebulosa**: degradados profundos (`#050a14` → `#0b1225` → `#160e2a`) con bordes técnicos cian (`rgba(56, 189, 248, 0.26)`) y haces superiores luminosos según severidad clínica (`NOMINAL`, `PRECAUCIÓN`, `ALERTA`, `CRÍTICO`).
+- **Tipografía Aeroespacial**: **Chakra Petch** (encabezados técnicos y métricas principales), **Space Grotesk** (lectura clínica) y **JetBrains Mono** (telemetría numérica, badges y ejes), servidas vía Google Fonts.
+- **Estandarización Operativa**: selector de idioma (`ES | EN`) ubicado en la esquina superior derecha, selector anatómico contextual integrado dentro del módulo óseo y paneles de captura unificados bajo el estándar `// REGISTRAR DATOS` e `IMPORTAR DATOS +`.
+- **Fotografía Espacial**: vista orbital nocturna *"In Darkness viewing Jakarta | International Space Station"*, acreditada con enlace directo a [Friends of NASA](https://www.friendsofnasa.org/search?updated-max=2024-07-31T12:43:00-07:00&max-results=16&reverse-paginate=true&m=0&hl=es-ES).
 
-- **Tripulación**: botón en el header para añadir astronautas (código, nombre, sexo, nacimiento) y
-  archivarlos. El archivado es reversible: conserva todas las series y se restauran desde la
-  pestaña “Archivados”. Siempre debe quedar al menos un astronauta activo.
-- **Descargas por astronauta** (botón **DESCARGAR** en el header, con menú desplegable):
-  - `summary.html` (imprimible), `summary.pdf` (reportlab) y `summary.json`;
-  - `data.json` (completo) y `data.csv` (un único CSV en formato largo
-    `module,recorded_at,metric,value,unit,flags,notes`).
+### Gestión de Tripulación y Exportación Científica
 
-Los gráficos conservan su lógica; solo heredan los nuevos tokens de color.
+- **Tripulación**: control en cabecera para dar de alta astronautas (código, nombre, sexo, fecha de nacimiento) y archivarlos de forma reversible sin perder sus series históricas.
+- **Descargas para Investigación**:
+  - Reportes clínicos: `summary.html` (imprimible), `summary.pdf` (generado vía ReportLab) y `summary.json`.
+  - Datasets crudos para ciencia de datos: `data.json` y `data.csv` unificado en formato largo (`module,recorded_at,metric,value,unit,flags,notes`).
 
-## Arquitectura
+---
 
-Screaming architecture: las carpetas nombran el **qué** (mediciones, monitoreo, astronautas), no el
-**cómo**. Cuatro capas con dependencias en un solo sentido:
+## Arquitectura del Sistema
+
+Implementa **Screaming Architecture** con separación estricta en cuatro capas y dependencias unidireccionales:
 
 ```
-api (HTTP) → modules (casos de uso) → domain (reglas) ← infrastructure (SQLite, archivos)
+api (HTTP) → modules (casos de uso) → domain (reglas biomédicas puras) ← infrastructure (SQLite, archivos)
 ```
 
 ```
 backend/
   app/
-    core/            config, bus de eventos, i18n, dependencias compartidas
-    domain/          modelos SQLModel, esquemas Pydantic, núcleo cientifico (bone.py)
-    infrastructure/  engine SQLite, repositorios, lectura de archivos
+    core/            configuración, bus de eventos in-process, i18n, dependencias
+    domain/          modelos SQLModel, esquemas Pydantic, motores matemáticos (bone.py, etc.)
+    infrastructure/  engine SQLite, repositorios, parsers de archivos
     modules/
-      astronauts/    alta y consulta de astronautas
-      measurements/  registro, validación de entrada e importación CSV/XLSX/JSON
-      monitoring/    evaluación de la serie, tendencia y triage
+      astronauts/    gestión de perfiles de tripulación
+      measurements/  registro, validación de dominio e importación masiva CSV/XLSX/JSON
+      monitoring/    evaluación longitudinal, tasas de cambio y triaje
     api/v1/          routers FastAPI (contratos HTTP)
-    i18n/            catálogos es.json / en.json (mensajes del backend)
-    scripts/         seed de datos de ejemplo
-  tests/             pytest: dominio puro + flujo HTTP completo
+    i18n/            catálogos es.json / en.json (mensajes clínicos del backend)
+    scripts/         generadores de referencias y seed de datos
+  tests/             suite pytest: dominio matemático puro + integración HTTP
 frontend/
   src/
-    lib/             cliente API tipado, tipos compartidos, formato de números/fechas
+    lib/             cliente API tipado, cálculo de severidades, formateadores
     i18n/            catálogos es/en y configuración de react-i18next
     modules/
-      shell/         header, selector de idioma, toast
-      astronauts/    contexto de astronauta (en header)
-      measurements/  asistente de 3 pasos e importación
-      monitoring/    KPIs, gráfico SVG y tabla de historial
+      shell/         Header unificado, selector de idioma y navegación
+      overview/      HUD principal, agente interactivo A.R.T.E.M.I.S. y SummaryCards
+      measurements/  asistente de 3 pasos ("Registrar datos") e importación
+      monitoring/    KPIs, gráficos vectoriales SVG y tablas de historial
 ```
 
-### Event-driven
+### Bus de Eventos (`Event-Driven`)
 
-`app/core/events.py` es un bus in-process con tópicos:
+`app/core/events.py` gestiona un bus en memoria que desacopla las lecturas del motor de evaluación:
 
-| Tópico | Se publica cuando | Suscriptor actual |
+| Tópico | Se dispara cuando | Efecto inmediato |
 | --- | --- | --- |
-| `measurement.created` | se registra una medición | invalida la cache de evaluaciones |
-| `measurement.imported` | termina una importación | invalida la cache de evaluaciones |
-| `astronaut.created` | se crea un astronauta | invalida la cache de evaluaciones |
+| `measurement.created` | se registra una nueva medición | invalida la caché de evaluaciones del astronauta |
+| `measurement.imported` | finaliza una carga masiva de archivos | recalcula series e invalida la caché |
+| `astronaut.created` | se registra un nuevo tripulante | inicializa contexto e invalida caché |
 
-No hay broker porque la app corre en una máquina; el bus desacopla efectos secundarios y deja el
-punto de extensión listo para métricas o auditoría.
+### Base de Datos
 
-### Base de datos
+- Archivo local: `backend/data/nasa_space.db` (excluido en git), inicializado automáticamente por el *lifespan* de FastAPI/Uvicorn.
+- Escalable mediante la variable de entorno `NASA_DATABASE_URL` a cualquier motor compatible con SQLAlchemy (incluyendo PostgreSQL en producción).
 
-- Archivo: `backend/data/nasa_space.db` (ignorado por git).
-- La crea **uvicorn** al arrancar (lifespan de FastAPI), no un proceso aparte.
-- Se puede cambiar con `NASA_DATABASE_URL`; cualquier URL SQLAlchemy sirve (Postgres incluido).
-- Reset: borrar el archivo y reiniciar.
+---
 
-## Reglas clínicas implementadas
+## Fundamento Científico y Reglas Clínicas por Módulo
 
-| Concepto | Regla |
+### 1. Módulo de Densidad Ósea (Método Acústico Confocal)
+
+Captura **BUA** (atenuación de ultrasonido de banda ancha), **UV/SOS** (velocidad del sonido) y **ATT**, estima la fracción de volumen óseo trabecular (**BV/TV**) mediante regresión publicada y evalúa la velocidad de desmineralización respecto a la línea base:
+
+| Concepto | Regla Matemática / Umbral |
 | --- | --- |
-| BV/TV predicho | `3.89e-4 · UV − 9e-4 · BUA − 0.456` |
-| Línea base | primera medición de cada astronauta **por sitio** |
-| Pérdida acumulada | `(BUA_base − BUA_actual) / BUA_base · 100` |
-| Tasa | pérdida acumulada / meses desde la línea base (≥ 0.1 mes) |
-| Nivel 1 Normal | tasa < 0.8 %/mes |
-| Nivel 2 Riesgo | 0.8 ≤ tasa ≤ 1.5 %/mes |
-| Nivel 3 Alerta | tasa > 1.5 %/mes **o** pérdida acumulada > 3 % |
+| **BV/TV predicho** | `3.89e-4 · UV − 9e-4 · BUA − 0.456` |
+| **Línea base** | Primera medición histórica de cada astronauta **por sitio anatómico** (`calcaneus` / `femoral_neck`) |
+| **Pérdida acumulada** | `(BUA_base − BUA_actual) / BUA_base · 100` |
+| **Tasa mensual** | `pérdida acumulada / meses desde la línea base` (mínimo 0.1 mes) |
+| **Nivel 1 · Nominal** | Tasa `< 0.8 %/mes` |
+| **Nivel 2 · Precaución / Riesgo** | `0.8 ≤ tasa ≤ 1.5 %/mes` |
+| **Nivel 3 · Alerta Crítica** | Tasa `> 1.5 %/mes` **o** pérdida acumulada `> 3 %` |
 
-Validación de dominio (se rechaza, no se extrapola): `0 < BUA < 200 dB/MHz`,
-`1200 ≤ UV ≤ 2000 m/s`, `0 < ATT < 200 dB/cm`. La fecha de sesión debe ser posterior a la línea
-base. ATT se almacena y se muestra, pero no puntúa: el modelo publicado no lo incluye.
+- **Validación estricta de dominio** (rechaza valores físicamente imposibles sin extrapolar): `0 < BUA < 200 dB/MHz`, `1200 ≤ UV ≤ 2000 m/s`, `0 < ATT < 200 dB/cm`.
+- **Referencias científicas (DOI)**: [10.1117/12.810048](https://doi.org/10.1117/12.810048) · [10.1016/j.actaastro.2012.08.032](https://doi.org/10.1016/j.actaastro.2012.08.032) · [10.1121/1.4784949](https://doi.org/10.1121/1.4784949).
 
-Referencias: [10.1117/12.810048](https://doi.org/10.1117/12.810048),
-[10.1016/j.actaastro.2012.08.032](https://doi.org/10.1016/j.actaastro.2012.08.032),
-[10.1121/1.4784949](https://doi.org/10.1121/1.4784949).
+#### Referencia Poblacional Terrestre y Extrapolación Geriátrica (Shin et al., 2005)
 
-## Referencia poblacional (Shin et al., 2005)
-
-El astronauta necesita **sexo** y **fecha de nacimiento**. La edad se calcula a la fecha de cada
-medición y se busca su grupo en la tabla de 12 grupos (2 sexos × 6 rangos) generada desde
-`_local/Ultrasonido.xlsx`:
+Cruza el sexo y la edad exacta del sujeto a la fecha de cada sesión contra las 12 cohortes normativas (n = 3.053 adultos):
 
 | Sexo | Edad | n | BUA media ± DE (dB/MHz) | SOS media ± DE (m/s) |
 |---|---|---:|---|---|
@@ -181,112 +174,73 @@ medición y se busca su grupo en la tabla de 12 grupos (2 sexos × 6 rangos) gen
 | Mujer | 60-69 | 756 | 95,4 ± 11,7 | 1520,8 ± 23,0 |
 | Mujer | 70-74 | 161 | 90,2 ± 11,7 | 1507,6 ± 20,5 |
 
-Con esa tabla se calculan, para BUA y para SOS:
+Cálculo automático de puntajes **Z** (ajustado por edad/sexo) y **T** (comparado contra adulto joven 20-29 años del mismo sexo):
 
 ```
-Z = (valor − media del grupo) / DE del grupo      (ajuste por edad y sexo)
-T = (valor − media del grupo 20-29 del sexo) / DE de ese grupo
+Z = (valor − media_grupo_edad) / DE_grupo_edad
+T = (valor − media_grupo_20_29) / DE_grupo_20_29
 ```
 
-Clasificación por convención OMS sobre **T**: `> -1,0` normal, `-2,5 < T ≤ -1,0` osteopenia,
-`T ≤ -2,5` osteoporosis. Se reporta el peor de BUA/SOS y el nivel de triage sigue calculándose por
-tasa de pérdida (son ejes distintos: estado vs. velocidad).
+- **Criterio OMS sobre T-score**: `T > -1,0` Nominal · `-2,5 < T ≤ -1,0` Osteopenia · `T ≤ -2,5` Osteoporosis.
 
-Fuera de 20-74 años se usa el grupo extremo más cercano y se emite un aviso. El origen y la
-población (coreana, n = 3.053) se muestran junto al resultado: es una referencia poblacional, no un
-diagnóstico clínico.
+### 2. Módulo de Cortisol Salival (Ritmo Circadiano CLIA/ECLIA)
 
-## Módulo de cortisol (independiente)
-
-La segunda sección de la página evalúa **cortisol salival** por CLIA/ECLIA con un semáforo que
-depende de la **hora exacta** de la muestra:
+Evalúa muestras de cortisol salival ajustando dinámicamente la mediana esperada según la **hora exacta** de toma:
 
 ```
-z = (ln(valor) − ln(mediana(hora))) / σ_ln        verde |z| ≤ 1,28 · amarillo ≤ 1,96 · rojo > 1,96
+z = (ln(valor) − ln(mediana(hora))) / σ_ln        Nominal |z| ≤ 1,28 · Precaución ≤ 1,96 · Alerta > 1,96
 ```
 
-- Referencia matutina combinada (n = 56): mediana 0,474 µg/dL, σ_ln 0,511; ancla nocturna
-  0,155 µg/dL e interpolación log-lineal entre 07:30 y 21:30.
-- Se guarda en **µg/dL** y se acepta **nmol/L** (÷ 27,59).
-- Reglas extra: piso del ensayo después de las 11:00, control p95 del fabricante, contraste por
-  sexo (dudoso si discrepa), aviso de edad fuera de 20–55, razón tarde/noche (15:30/21:00), basal
-  propio con ≥3 muestras y bandera de cruce con el módulo óseo.
-- Datos: tabla `cortisol_sample`; referencia en `backend/app/data/cortisol_reference.json`.
-- Detalle completo en [docs/cortisol-spec.md](docs/cortisol-spec.md).
+- Ancla matutina (n = 56): mediana `0,474 µg/dL` (`σ_ln = 0,511`); ancla nocturna `0,155 µg/dL` con interpolación log-lineal entre 07:30 y 21:30.
+- Conversión automática entre **µg/dL** y **nmol/L** (`÷ 27,59`).
+- Incluye verificación de piso del ensayo pos-11:00, control externo p95 (Roche Cortisol II), razón vespertina/nocturna (15:30/21:00), basal individual con ≥ 3 muestras y alerta cruzada con pérdida ósea. Especificación completa en [docs/cortisol-spec.md](docs/cortisol-spec.md).
 
-La vista se cambia con las pestañas **Densidad ósea** / **Cortisol** del encabezado; el astronauta
-y el idioma son compartidos.
+### 3. Módulo de Radiación Espacial (Dosimetría TEPC)
 
-## Módulo de radiación (TEPC)
+Construido sobre telemetría real de contador proporcional equivalente a tejido (`_local/data_radiacion.csv`, 1.441 muestras de 60 s). Evalúa la exposición en tres capas jerárquicas:
 
-Sección independiente construida sobre `_local/data_radiacion.csv` (export ASCII del TEPC: un día,
-1.441 muestras de 60 s, solo tasa equivalente). La referencia se genera con
-`mise run radiation-reference` y produce P50/P95/P99 por estrato con retroceso jerárquico. Con esta
-base queda un **estrato general** (las franjas horarias no alcanzan el mínimo de 120) y la **capa
-diaria en “insuficiente”**.
+- **Capa A · Instantánea**: `≤ P95` Nominal · `P95–P99` Precaución · `> P99` Alerta (requiere 3 lecturas consecutivas para evitar falsos positivos por picos transitorios).
+- **Capa B · Diaria**: dosis acumulada en 24 h frente a referencia diaria.
+- **Capa C · Acumulada de Misión y Carrera**: calcula `F30 = H30 / 250 mSv` (límite de 30 días) y `F_carrera = (dosis_previa + misión + proyección) / 600 mSv`. Especificación en [docs/radiation-spec.md](docs/radiation-spec.md).
 
-Clasificación en tres capas, color final = la peor:
+### 4. Módulo de Salud Mental y Carga Alostática (ALI)
 
-- **A instantánea**: `≤P95` verde, `P95–P99` amarillo, `>P99` rojo solo si 3 lecturas seguidas.
-- **B diaria**: dosis del día vs referencia diaria (no disponible con un solo día).
-- **C acumulada**: `F30 = H30/250 mSv`, `F_carrera = (previa + misión + proyección)/600 mSv`.
+Batería psicométrica y neuroconductual interactiva libre de hardware invasivo:
 
-Entrada: fecha-hora UTC, µSv/min, µGy/min opcional (para `Q̄`), región manual GCR/SAA, módulo, día
-de misión, duración y dosis previa. Detalle en [docs/radiation-spec.md](docs/radiation-spec.md).
+- **NASA-TLX**: carga de trabajo subjetiva en 6 dimensiones con seguimiento EWMA frente a referencia de Grier.
+- **Chequeo Diario de Ánimo (CDA / DMRS)**: 10 ítems afectivos con línea base móvil de 14 días.
+- **Arquitectura de Sueño**: eficiencia de sueño (TIB/TST/SE), índice de regularidad (SRI) y deuda acumulada de 7 días.
+- **PVT-B Interactivo**: test de vigilancia psicomotora de 60/180 s para cuantificar lapsos de atención, falsos inicios y fatiga objetiva frente a percepción subjetiva. Especificación en [docs/mental-spec.md](docs/mental-spec.md).
 
-## Módulo de salud mental (cuestionarios)
+---
 
-Sección independiente con cuatro instrumentos interactivos, sin sensores:
-
-- **NASA-TLX posmisión**: tarea + 6 escalas + 15 comparaciones aleatorias; `TLX`, `RTLX`, pesos y
-  dimensión dominante; curva con referencia Grier y línea base personal (EWMA).
-- **Chequeo Diario de Ánimo (CDA)**: 10 ítems, `IAD` y subíndices, semáforo provisional y con línea
-  base de 14 días.
-- **Sueño personalizado**: registro matutino, TIB/TST/SE, SRI, deuda de 7 días, ventana semanal y
-  descarte ambiental.
-- **PVT-B interactivo**: 60/180 s, lapsos, falsos inicios, velocidad y semáforo frente a la línea
-  base, con discrepancia subjetiva.
-
-La vista tiene dos pestañas: **Cuestionarios** (los cuatro formularios) y **Seguimiento** (curvas,
-prescripciones R1–R10, adherencia y aviso de privacidad). Detalle en
-[docs/mental-spec.md](docs/mental-spec.md).
-## API
+## Contratos de la API REST
 
 | Método | Ruta | Descripción |
 | --- | --- | --- |
-| GET | `/api/health` | estado del proceso y URL de la base |
-| GET | `/api/v1/health` | alias dentro del prefijo versionado |
-| GET | `/api/v1/meta` | modelo, umbrales, unidades, sitios e idiomas |
-| GET | `/api/v1/astronauts` | lista de astronautas |
-| POST | `/api/v1/astronauts` | alta (`{"code","name","sex","birth_date"}`) |
-| PATCH | `/api/v1/astronauts/{code}` | perfil: sexo, fecha de nacimiento, nombre |
-| GET | `/api/v1/astronauts/{code}` | detalle |
-| GET | `/api/v1/astronauts/{code}/measurements?site=` | mediciones |
-| POST | `/api/v1/astronauts/{code}/measurements` | alta de medición |
-| POST | `/api/v1/astronauts/{code}/preview` | evalúa sin guardar (paso 3 del asistente) |
-| POST | `/api/v1/astronauts/{code}/measurements/import` | importa archivo |
-| GET | `/api/v1/astronauts/{code}/monitoring?site=&window=&lang=` | serie evaluada + nivel actual |
-| POST | `/api/v1/astronauts/{code}/cortisol` | registra y evalúa una muestra de cortisol |
-| GET | `/api/v1/astronauts/{code}/cortisol?days=` | serie de cortisol, razón y basal |
-| POST | `/api/v1/astronauts/{code}/cortisol/import` | importa muestras (CSV/XLSX/JSON) |
-| GET | `/api/v1/astronauts/{code}/radiation` | lecturas + capas A/B/C + acumulados |
-| POST | `/api/v1/astronauts/{code}/radiation` | registra una lectura (UTC) |
-| GET | `/api/v1/astronauts/{code}/mental?days=` | serie diaria + zona actual |
-| PUT | `/api/v1/astronauts/{code}/mental/{date}` | guarda/reemplaza el día (TLX + DMRS) |
+| GET | `/api/health` | Estado operativo del servicio y conexión a base de datos |
+| GET | `/api/v1/meta` | Metadatos del modelo, umbrales, unidades, sitios e idiomas |
+| GET | `/api/v1/astronauts` | Lista de astronautas activos y archivados |
+| POST | `/api/v1/astronauts` | Alta de tripulante (`{"code","name","sex","birth_date"}`) |
+| PATCH | `/api/v1/astronauts/{code}` | Actualización de perfil demográfico |
+| GET | `/api/v1/astronauts/{code}/measurements?site=` | Historial de sesiones ultrasónicas |
+| POST | `/api/v1/astronauts/{code}/measurements` | Registro de nueva medición ósea |
+| POST | `/api/v1/astronauts/{code}/preview` | Simulación previa al guardado (paso 3 del asistente) |
+| POST | `/api/v1/astronauts/{code}/measurements/import` | Importación masiva de archivos (CSV/XLSX/JSON) |
+| GET | `/api/v1/astronauts/{code}/monitoring?site=&window=&lang=` | Serie evaluada, BV/TV, Z/T-scores y nivel de triaje |
+| POST | `/api/v1/astronauts/{code}/cortisol` | Registro y evaluación circadiana de muestra de cortisol |
+| GET | `/api/v1/astronauts/{code}/cortisol?days=` | Serie histórica de cortisol, razón tarde/noche y basal |
+| POST | `/api/v1/astronauts/{code}/cortisol/import` | Importación masiva de muestras de cortisol |
+| GET | `/api/v1/astronauts/{code}/radiation` | Lecturas TEPC + evaluación por capas A/B/C + proyección |
+| POST | `/api/v1/astronauts/{code}/radiation` | Registro de lectura dosimétrica (UTC) |
+| GET | `/api/v1/astronauts/{code}/mental?days=` | Serie diaria EWMA, índice de carga alostática (ALI) y zona |
+| PUT | `/api/v1/astronauts/{code}/mental/{date}` | Registro/actualización diaria de pruebas cognitivas y ánimo |
 
-Todas las respuestas de error usan `{"detail": "...", "code": "..."}` en el idioma solicitado.
+---
 
-### i18n
+## Formato de Importación Masiva
 
-- Idiomas: **es** y **en**.
-- El frontend traduce su interfaz (`frontend/src/i18n`).
-- El backend traduce errores y el texto clínico de cada nivel (`backend/app/i18n`), resolviendo
-  `?lang=` → `Accept-Language` → `es`.
-- La preferencia del navegador queda en `localStorage` (`nasa-space-lang`).
-
-## Importación de datos
-
-Formatos: **CSV**, **XLSX** y **JSON**. El formato se detecta por extensión.
+Soporta archivos **CSV**, **XLSX** y **JSON** con validación fila por fila (las filas corruptas se reportan con número de línea sin abortar las filas válidas):
 
 ```csv
 date,bua,uv,att,site
@@ -294,29 +248,15 @@ date,bua,uv,att,site
 2026-07-31,77.5,1556,51.6,calcaneus
 ```
 
-- Columnas obligatorias: `date` (o `fecha`) y `bua`, `uv`. Opcionales: `att`, `site`.
-- Fechas aceptadas: `YYYY-MM-DD`, `DD/MM/YYYY`, `YYYY/MM/DD`, `DD-MM-YYYY`, `MM/DD/YYYY`.
-- Sitios: `calcaneus` / `calcáneo` / `talón` y `femoral_neck` / `cuello femoral`.
-- El archivo se ordena por fecha antes de escribir y se valida fila a fila: la respuesta reporta
-  `created`, `skipped` y los errores con número de línea. Un archivo con filas malas no pierde las
-  buenas.
+- Formatos de fecha admitidos: `YYYY-MM-DD`, `DD/MM/YYYY`, `YYYY/MM/DD`, `DD-MM-YYYY`, `MM/DD/YYYY`.
+- Sitios válidos: `calcaneus` (`calcáneo` / `talón`) y `femoral_neck` (`cuello femoral`).
+- Archivos de prueba disponibles en la carpeta `examples/`.
 
-Ejemplos listos en `examples/`.
+---
 
-## Escalabilidad a nuevos factores
+## Calidad de Software y Estado del Proyecto
 
-El módulo óseo no está cableado a la API:
+- **127 tests automatizados de backend** (reglas de dominio, tablas poblacionales, cortisol, radiación, salud mental y endpoints HTTP) y **4 suites de frontend** pasando en verde.
+- Linter **Ruff** limpio, tipado **TypeScript estricto** y compilación de producción verificada.
 
-1. Nuevo factor → carpeta `app/modules/<factor>/` con su `service.py` y `router.py`.
-2. Sus fórmulas puras → `app/domain/<factor>.py` con tests propios.
-3. La tabla `measurement` guarda `site` y parámetros óseos; los factores nuevos usan su propia
-   tabla (`cortisol_sample`) o la columna `source`/atributos extendidos, sin tocar lo existente.
-4. El `triage` por niveles se reutiliza: recibe números y umbrales, no tipos de medición.
-
-## Estado
-
-- 127 tests de backend (dominio, referencias, cortisol, radiación, salud mental y API) y 4 de frontend en verde.
-- Ruff limpio, TypeScript estricto y build de producción verificado.
-- Base local creada por uvicorn y hot reload comprobado en `bun run dev`.
-
-Ver [DEV.md](DEV.md) para el flujo de trabajo diario.
+Consultar [DEV.md](DEV.md) para comandos adicionales de mantenimiento y pruebas.
