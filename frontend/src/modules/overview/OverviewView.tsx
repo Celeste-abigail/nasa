@@ -45,10 +45,6 @@ function readSelection(): ModuleKey[] {
   }
 }
 
-/**
- * Estandariza las etiquetas de severidad en los 4 módulos para evitar
- * mezclar colores ("Amarillo", "Naranja") con textos largos ("Alerta crítica").
- */
 function standardBadge(sev: number, lang: string): string {
   const isEn = lang.startsWith("en");
   switch (sev) {
@@ -285,12 +281,10 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
     return list;
   }, [bSev, cSev, rSev, mSev]);
 
-  // Reinicia el índice al cambiar de astronauta
   useEffect(() => {
     setActiveIndex(0);
   }, [astronaut, activeAlerts.length]);
 
-  // Rotación automática cada 4.5 segundos si hay más de una alerta activa
   useEffect(() => {
     if (activeAlerts.length <= 1) return;
     const timer = window.setInterval(() => {
@@ -302,21 +296,19 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
   const currentArtemis = activeAlerts[activeIndex % activeAlerts.length];
 
   return (
-    <div className="neptuni-layout">
-      <section className="neptuni-hero">
-        <div className="neptuni-hero-left">
-          {/* 1. KICKER LIMPIO: SOLO TELEMETRÍA BIOASTRONÁUTICA */}
-          <div className="neptuni-kicker">
+    <div className="labquip-layout">
+      <section className="labquip-hero">
+        <div className="labquip-hero-left">
+          <div className="labquip-kicker">
             <span className="kicker-pulse-dot" />
             <span>TELEMETRÍA BIOASTRONÁUTICA</span>
           </div>
 
-          <h1 className="neptuni-giant-title">
+          <h1 className="labquip-giant-title">
             <span className="solid-line">ASTRO HEALTH</span>
-            <span className="outline-line">MONITOR SCAN</span>
+            <span className="outline-line">MONITOR APP</span>
           </h1>
 
-          {/* 2. HUD TELEMÉTRICO ABIERTO (SIN CAJAS DE IA) */}
           <div className="bio-hud-stream">
             <div className="bio-hud-meta">
               <div className="bio-hud-subject-line">
@@ -342,7 +334,10 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
               </div>
 
               <div className={`hud-alert-count s${worstSeverity}`}>
-                <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" />{" "}
+                <i
+                  className="fa-solid fa-triangle-exclamation"
+                  aria-hidden="true"
+                />{" "}
                 {attention > 0
                   ? t("overview.attention", { count: attention })
                   : t("overview.nominal")}
@@ -354,7 +349,7 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
                 <small>PÉRDIDA ÓSEA</small>
                 <strong>
                   {boneData?.current
-                    ? `-${fmt(boneData.current.cumulative_loss_pct, lang, 1)}%`
+                    ? `${fmt(boneData.current.cumulative_loss_pct, lang, 1)}%`
                     : "—"}
                 </strong>
                 <span>
@@ -392,16 +387,15 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
               </div>
             </div>
 
-            {/* 5. COMENTARIO SARCÁSTICO / CÓMICO SEGÚN LAS ALERTAS */}
             <p key={currentArtemis.key} className="bio-hud-sarcasm">
               <span>NOTA CLÍNICA DE ARTEMIS:</span> “{currentArtemis.sarcasm}”
             </p>
           </div>
 
-          <div className="neptuni-cta-row">
+          <div className="labquip-cta-row">
             <button
               type="button"
-              className="neptuni-btn-primary"
+              className="labquip-btn-primary"
               onClick={() =>
                 onOpen(
                   currentArtemis.key === "ok" ? "bone" : currentArtemis.key
@@ -413,8 +407,7 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
           </div>
         </div>
 
-        {/* 4. DERECHA: ARTEMIS CON ROTACIÓN AUTOMÁTICA DE ESTADOS */}
-        <div className="neptuni-hero-right">
+        <div className="labquip-hero-right">
           <div
             className="artemis-floating-stage"
             onClick={() =>
@@ -457,8 +450,8 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
             </div>
           )}
 
-          <div className="neptuni-mascot-bar">
-            <div key={currentArtemis.key} className="neptuni-speech-bubble">
+          <div className="labquip-mascot-bar">
+            <div key={currentArtemis.key} className="labquip-speech-bubble">
               <strong>
                 {currentArtemis.title}
                 {activeAlerts.length > 1
@@ -471,9 +464,19 @@ export function OverviewView({ astronaut, site, lang, onOpen }: Props) {
         </div>
       </section>
 
-      {/* TIRA INFERIOR DE MÓDULOS */}
-      <div className="neptuni-strip-header">
-        <div className="neptuni-strip-title">
+      {/* LEYENDA DISCRETA EN BLANCO DE LA IMAGEN CON HIPERVÍNCULO */}
+      <div className="labquip-photo-credit">
+        <a
+          href="https://www.friendsofnasa.org/search?updated-max=2024-07-31T12:43:00-07:00&max-results=16&reverse-paginate=true&m=0&hl=es-ES"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          In Darkness viewing Jakarta | International Space Station
+        </a>
+      </div>
+
+      <div className="labquip-strip-header">
+        <div className="labquip-strip-title">
           <span>TELEMETRÍA MULTIPARAMÉTRICA · 4 NODOS ACTIVOS</span>
         </div>
 

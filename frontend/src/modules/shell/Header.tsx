@@ -33,7 +33,6 @@ export function Header({
   const { t } = useTranslation();
   const [siteHost, setSiteHost] = useState<Element | null>(null);
 
-  // Convierte el campo estático "SITIO" dentro de Densidad Ósea en un selector real
   useEffect(() => {
     if (view !== "bone") {
       setSiteHost(null);
@@ -59,18 +58,22 @@ export function Header({
 
   return (
     <>
-      <header className="neptuni-header">
-        <div className="neptuni-brand-wrap">
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,600;0,700;1,600&family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      />
+      <header className="labquip-header">
+        <div className="labquip-brand-wrap">
           <button
             type="button"
-            className="neptuni-badge-logo"
+            className="labquip-badge-logo"
             onClick={() => onView("overview")}
           >
             <i className="fa-solid fa-satellite" aria-hidden="true" />
-            <span>LABQUIP.SCAN</span>
+            <span>LABQUIP.APP</span>
           </button>
 
-          <div className="neptuni-inline-controls">
+          <div className="labquip-inline-controls">
             <label className="sr-only" htmlFor="astronaut">
               {t("header.astronaut")}
             </label>
@@ -90,8 +93,8 @@ export function Header({
           </div>
         </div>
 
-        <div className="neptuni-right-bar">
-          <nav className="neptuni-nav">
+        <div className="labquip-right-bar">
+          <nav className="labquip-nav">
             <div className="view-tabs" role="group" aria-label={t("app.title")}>
               {tabs.map((tab) => (
                 <button

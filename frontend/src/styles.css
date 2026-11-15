@@ -39,7 +39,7 @@ body {
   color: var(--ink);
   font: 15px/1.55 var(--font-body);
   background-color: var(--bg);
-  /* Viñeta estilo NEPTUNI: deja ver la Tierra y la ISS en el centro/derecha */
+  /* Viñeta estilo labquip: deja ver la Tierra y la ISS en el centro/derecha */
   background-image:
     radial-gradient(circle at 62% 32%, rgba(7, 10, 15, 0.05) 0%, rgba(7, 10, 15, 0.38) 65%, rgba(5, 8, 12, 0.68) 100%),
     linear-gradient(180deg, rgba(7, 10, 15, 0.12) 0%, rgba(7, 10, 15, 0.58) 100%),
@@ -77,7 +77,7 @@ svg text {
   padding: 20px 24px 110px;
 }
 
-/* --- HEADER ESTILO EDITORIAL / NEPTUNI --- */
+/* --- HEADER ESTILO EDITORIAL / labquip --- */
 header {
   display: flex;
   flex-wrap: wrap;
@@ -687,7 +687,7 @@ td:last-child {
 .bone-osteoporosis { --c: var(--bad); --cb: var(--bad-bg); }
 .bone-unknown { --c: var(--muted); --cb: transparent; }
 
-/* --- NAVEGACION PRINCIPAL ESTILO NEPTUNI --- */
+/* --- NAVEGACION PRINCIPAL ESTILO labquip --- */
 .view-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -1159,7 +1159,7 @@ td:last-child {
   padding: 10px 0;
 }
 
-/* --- WIDGET DE LA TORTUGA (ESTILO MASCOTA NEPTUNI) --- */
+/* --- WIDGET DE LA TORTUGA (ESTILO MASCOTA labquip) --- */
 .turtle-companion {
   position: fixed;
   right: 24px;
@@ -1228,7 +1228,7 @@ td:last-child {
 }
 
 /* =========================================================
-   REDISEÑO ESTRUCTURAL ESTILO NEPTUNI + MASCOTA TORTUGA
+   REDISEÑO ESTRUCTURAL ESTILO labquip + MASCOTA TORTUGA
    ========================================================= */
 
 .sr-only {
@@ -1242,7 +1242,7 @@ td:last-child {
   border: 0;
 }
 
-.neptuni-header {
+.labquip-header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1258,14 +1258,14 @@ td:last-child {
   backdrop-filter: none;
 }
 
-.neptuni-brand-wrap {
+.labquip-brand-wrap {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 14px;
 }
 
-.neptuni-badge-logo {
+.labquip-badge-logo {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -1281,7 +1281,7 @@ td:last-child {
   box-shadow: 0 0 24px rgba(45, 212, 191, 0.45);
 }
 
-.neptuni-inline-controls {
+.labquip-inline-controls {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1322,22 +1322,22 @@ td:last-child {
   color: #031512;
 }
 
-.neptuni-nav {
+.labquip-nav {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
 }
 
-.neptuni-credit {
+.labquip-credit {
   font-family: var(--font-mono);
   font-size: 10px;
   color: rgba(255, 255, 255, 0.55);
   letter-spacing: 0.06em;
 }
 
-/* --- HERO CENTRAL ESTILO NEPTUNI --- */
-.neptuni-hero {
+/* --- HERO CENTRAL ESTILO labquip --- */
+.labquip-hero {
   display: grid;
   grid-template-columns: 1.25fr 0.95fr;
   gap: 32px;
@@ -1345,7 +1345,7 @@ td:last-child {
   padding: 18px 0 32px;
 }
 
-.neptuni-kicker {
+.labquip-kicker {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -1365,7 +1365,7 @@ td:last-child {
   box-shadow: 0 0 12px var(--c, var(--accent));
 }
 
-.neptuni-giant-title {
+.labquip-giant-title {
   margin: 0 0 14px;
   display: flex;
   flex-direction: column;
@@ -1373,14 +1373,14 @@ td:last-child {
   letter-spacing: 0.04em;
 }
 
-.neptuni-giant-title .solid-line {
+.labquip-giant-title .solid-line {
   font-size: clamp(42px, 6vw, 74px);
   font-weight: 700;
   color: #ffffff;
   text-shadow: 0 8px 28px rgba(0, 0, 0, 0.65);
 }
 
-.neptuni-giant-title .outline-line {
+.labquip-giant-title .outline-line {
   font-size: clamp(40px, 5.6vw, 68px);
   font-weight: 700;
   color: transparent;
@@ -1388,14 +1388,14 @@ td:last-child {
   letter-spacing: 0.06em;
 }
 
-.neptuni-tags {
+.labquip-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 16px;
 }
 
-.neptuni-tag {
+.labquip-tag {
   padding: 4px 12px;
   border-radius: 6px;
   background: rgba(15, 23, 34, 0.72);
@@ -1406,7 +1406,7 @@ td:last-child {
   backdrop-filter: blur(8px);
 }
 
-.neptuni-lead {
+.labquip-lead {
   margin: 0 0 16px;
   max-width: 580px;
   font-size: 15px;
@@ -1415,7 +1415,7 @@ td:last-child {
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
 }
 
-.neptuni-didyouknow {
+.labquip-didyouknow {
   max-width: 560px;
   padding: 12px 16px;
   border-radius: 10px;
@@ -1427,23 +1427,23 @@ td:last-child {
   backdrop-filter: blur(12px);
 }
 
-.neptuni-didyouknow strong {
+.labquip-didyouknow strong {
   color: var(--accent);
 }
 
-.neptuni-didyouknow b {
+.labquip-didyouknow b {
   color: #ffffff;
   font-family: var(--font-mono);
 }
 
-.neptuni-cta-row {
+.labquip-cta-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 14px;
 }
 
-.neptuni-btn-primary {
+.labquip-btn-primary {
   min-height: 44px;
   padding: 0 22px;
   border-radius: 999px;
@@ -1455,7 +1455,7 @@ td:last-child {
   box-shadow: 0 0 24px rgba(45, 212, 191, 0.4);
 }
 
-.neptuni-btn-secondary {
+.labquip-btn-secondary {
   position: relative;
   min-height: 44px;
   padding: 0 20px;
@@ -1470,7 +1470,7 @@ td:last-child {
   gap: 8px;
 }
 
-.neptuni-pill-new {
+.labquip-pill-new {
   position: absolute;
   top: -10px;
   right: 12px;
@@ -1484,14 +1484,14 @@ td:last-child {
 }
 
 /* --- MARCO POLAROID DERECHO Y GLOBO DE LA TORTUGA --- */
-.neptuni-hero-right {
+.labquip-hero-right {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 14px;
 }
 
-.neptuni-polaroid {
+.labquip-polaroid {
   width: 100%;
   max-width: 390px;
   background: rgba(248, 250, 252, 0.94);
@@ -1503,11 +1503,11 @@ td:last-child {
   transition: transform 0.2s ease;
 }
 
-.neptuni-polaroid:hover {
+.labquip-polaroid:hover {
   transform: translateY(-4px) rotate(-0.5deg);
 }
 
-.neptuni-polaroid-screen {
+.labquip-polaroid-screen {
   width: 100%;
   min-height: 215px;
   border-radius: 4px;
@@ -1520,7 +1520,7 @@ td:last-child {
   overflow: hidden;
 }
 
-.neptuni-polaroid-screen .turtle-canvas {
+.labquip-polaroid-screen .turtle-canvas {
   width: 100%;
   max-width: 280px;
   height: auto;
@@ -1534,7 +1534,7 @@ td:last-child {
   padding: 20px;
 }
 
-.neptuni-polaroid-caption {
+.labquip-polaroid-caption {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1546,11 +1546,11 @@ td:last-child {
   color: #475569;
 }
 
-.neptuni-polaroid-caption b {
+.labquip-polaroid-caption b {
   color: #0f766e;
 }
 
-.neptuni-mascot-bar {
+.labquip-mascot-bar {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -1558,7 +1558,7 @@ td:last-child {
   max-width: 390px;
 }
 
-.neptuni-speech-bubble {
+.labquip-speech-bubble {
   width: 100%;
   padding: 12px 16px;
   border-radius: 12px;
@@ -1570,7 +1570,7 @@ td:last-child {
   border-left: 4px solid var(--accent);
 }
 
-.neptuni-speech-bubble strong {
+.labquip-speech-bubble strong {
   display: block;
   font-family: var(--font-mono);
   font-size: 10px;
@@ -1580,7 +1580,7 @@ td:last-child {
 }
 
 /* --- CABECERA DE LA TIRA INFERIOR --- */
-.neptuni-strip-header {
+.labquip-strip-header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1591,7 +1591,7 @@ td:last-child {
   border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.neptuni-strip-title {
+.labquip-strip-title {
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
@@ -1599,15 +1599,15 @@ td:last-child {
   color: #cbd5e1;
 }
 
-.neptuni-strip-header .overview-chips {
+.labquip-strip-header .overview-chips {
   margin-bottom: 0;
 }
 
 @media (max-width: 900px) {
-  .neptuni-hero {
+  .labquip-hero {
     grid-template-columns: 1fr;
   }
-  .neptuni-hero-right {
+  .labquip-hero-right {
     align-items: flex-start;
   }
 }
@@ -1642,7 +1642,7 @@ td:last-child {
   display: block;
 }
 
-.neptuni-speech-bubble {
+.labquip-speech-bubble {
   background: rgba(12, 18, 28, 0.84) !important;
   color: #f8fafc !important;
   border: 1px solid rgba(56, 189, 248, 0.45) !important;
@@ -1650,7 +1650,7 @@ td:last-child {
   backdrop-filter: blur(12px);
 }
 
-.neptuni-speech-bubble strong {
+.labquip-speech-bubble strong {
   color: var(--accent) !important;
 }
 
@@ -1955,8 +1955,8 @@ body::before {
 }
 
 /* 2. Título ancho en 2 líneas (sin comprimir la columna izquierda) */
-.neptuni-giant-title .solid-line,
-.neptuni-giant-title .outline-line {
+.labquip-giant-title .solid-line,
+.labquip-giant-title .outline-line {
   white-space: nowrap;
 }
 
@@ -2010,8 +2010,8 @@ body::before {
 }
 
 @media (max-width: 768px) {
-  .neptuni-giant-title .solid-line,
-  .neptuni-giant-title .outline-line {
+  .labquip-giant-title .solid-line,
+  .labquip-giant-title .outline-line {
     white-space: normal;
   }
 }
@@ -2358,7 +2358,7 @@ tbody tr:hover {
 }
 
 /* --- IDIOMA EN ESQUINA SUPERIOR DERECHA Y SELECTOR DE SITIO EN PANEL ÓSEO --- */
-.neptuni-right-bar {
+.labquip-right-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -2375,4 +2375,172 @@ tbody tr:hover {
 
 .static-value select {
   width: 100%;
+}
+
+/* =====================================================================
+   SISTEMA VISUAL UNIFICADO (NIVEL JURADO): JERARQUÍA DE PLACAS + GEOMETRÍA 45°
+   ===================================================================== */
+
+:root {
+  --font-display: "Chakra Petch", sans-serif !important;
+  --font-body: "Space Grotesk", system-ui, sans-serif !important;
+  /* JetBrains Mono evita que las tildes y letras pequeñas se peguen */
+  --font-mono: "JetBrains Mono", ui-monospace, monospace !important;
+
+  --artemis-scutes-svg: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='210' viewBox='0 0 320 210' fill='none'%3E%3Cdefs%3E%3ClinearGradient id='plateFill' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%23050a14' stop-opacity='0.92'/%3E%3Cstop offset='100%25' stop-color='%230f1b33' stop-opacity='0.78'/%3E%3C/linearGradient%3E%3ClinearGradient id='seamGlow' x1='1' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%2338bdf8' stop-opacity='0.62'/%3E%3Cstop offset='55%25' stop-color='%23818cf8' stop-opacity='0.35'/%3E%3Cstop offset='100%25' stop-color='%2338bdf8' stop-opacity='0.08'/%3E%3C/linearGradient%3E%3ClinearGradient id='edgeBevel' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%237dd3fc' stop-opacity='0.5'/%3E%3Cstop offset='100%25' stop-color='%231e293b' stop-opacity='0.15'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg stroke-linejoin='bevel'%3E%3Cpath d='M320 0 L248 0 M320 0 L320 118 M282 0 L264 26 L228 32 M320 44 L286 52 L258 76' stroke='url(%23seamGlow)' stroke-width='0.75' stroke-dasharray='2 2'/%3E%3Cpolygon points='285,2 318,2 318,29 294,35 279,19' fill='url(%23plateFill)' stroke='url(%23seamGlow)' stroke-width='1.3'/%3E%3Cpolyline points='286,4 316,4 316,27' stroke='url(%23edgeBevel)' stroke-width='0.8'/%3E%3Cpolygon points='251,3 281,2 275,21 256,26 244,14' fill='url(%23plateFill)' stroke='url(%23seamGlow)' stroke-width='1.2'/%3E%3Cpolygon points='296,39 318,33 318,66 299,71 287,54' fill='url(%23plateFill)' stroke='url(%23seamGlow)' stroke-width='1.25'/%3E%3Cpolygon points='260,30 278,24 291,38 283,54 262,51 253,39' fill='url(%23plateFill)' stroke='url(%23seamGlow)' stroke-width='1.2'/%3E%3Cpolygon points='301,75 318,70 318,101 304,106 293,90' fill='url(%23plateFill)' stroke='url(%23seamGlow)' stroke-width='1.15'/%3E%3Cpolygon points='219,7 241,4 239,20 223,25 213,15' fill='url(%23plateFill)' stroke='url(%23seamGlow)' stroke-width='1.1' opacity='0.9'/%3E%3Cpolygon points='227,31 247,28 249,45 234,52 221,42' fill='url(%23plateFill)' stroke='url(%23seamGlow)' stroke-width='1.15' opacity='0.88'/%3E%3Cpolygon points='265,57 284,59 289,76 274,85 259,74' fill='url(%23plateFill)' stroke='url(%23seamGlow)' stroke-width='1.1' opacity='0.85'/%3E%3Cpolygon points='239,58 256,55 255,73 241,79 231,68' fill='url(%23plateFill)' stroke='url(%23seamGlow)' stroke-width='1.05' opacity='0.8'/%3E%3Cpolygon points='277,91 290,94 295,110 281,117 270,104' fill='url(%23plateFill)' stroke='url(%23seamGlow)' stroke-width='1' opacity='0.76'/%3E%3Cpolygon points='299,112 316,108 316,131 302,135 295,122' fill='url(%23plateFill)' stroke='url(%23seamGlow)' stroke-width='0.95' opacity='0.7'/%3E%3Cpolygon points='193,14 208,11 209,24 196,27 189,20' fill='url(%23plateFill)' stroke='url(%23seamGlow)' stroke-width='0.95' opacity='0.68'/%3E%3Cpolygon points='201,35 216,33 217,47 204,51 196,43' fill='url(%23plateFill)' stroke='url(%23seamGlow)' stroke-width='0.95' opacity='0.62'/%3E%3Cpolygon points='213,59 226,57 227,70 215,74 208,65' fill='url(%23plateFill)' stroke='url(%23seamGlow)' stroke-width='0.9' opacity='0.54'/%3E%3Cpolygon points='249,85 262,83 264,97 252,102 244,93' fill='url(%23plateFill)' stroke='url(%23seamGlow)' stroke-width='0.9' opacity='0.52'/%3E%3Cpolygon points='176,29 188,27 189,38 178,41 172,34' fill='url(%23plateFill)' stroke='url(%23seamGlow)' stroke-width='0.85' opacity='0.42'/%3E%3Cpolygon points='188,56 199,54 200,64 190,67 184,61' fill='url(%23plateFill)' stroke='url(%23seamGlow)' stroke-width='0.8' opacity='0.34'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.labquip-giant-title .solid-line {
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase;
+}
+
+.labquip-giant-title .outline-line {
+  -webkit-text-stroke: 2px #38bdf8 !important;
+  filter: drop-shadow(0 0 18px rgba(56, 189, 248, 0.35));
+}
+
+h1, h2, h3, .labquip-badge-logo, .summary-title {
+  font-family: var(--font-display) !important;
+  letter-spacing: 0.09em !important;
+}
+
+.subtitle {
+  font-family: var(--font-body) !important;
+  font-size: 11.5px !important;
+  letter-spacing: 0.04em !important;
+  color: #94a3b8 !important;
+}
+
+/* 1. UNIFICACIÓN GEOMÉTRICA: CERO PÍLDORAS REDONDAS EN EL HEADER Y BOTONES */
+.labquip-badge-logo,
+.labquip-btn-primary,
+.view-tabs button,
+.compact-select,
+.compact-lang {
+  border-radius: 0 !important;
+  clip-path: polygon(
+    0 0,
+    calc(100% - 10px) 0,
+    100% 10px,
+    100% 100%,
+    10px 100%,
+    0 calc(100% - 10px)
+  );
+}
+
+.labquip-btn-primary {
+  font-family: var(--font-display) !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.labquip-speech-bubble {
+  border-radius: 0 !important;
+  clip-path: polygon(
+    0 0,
+    calc(100% - 14px) 0,
+    100% 14px,
+    100% 100%,
+    14px 100%,
+    0 calc(100% - 14px)
+  );
+}
+
+/* 2. PATRÓN DE PLACAS EXCLUSIVO EN CONTENEDORES PADRE (SIN SATURAR HIJOS) */
+.summary-card,
+.panel,
+.recommendation-panel,
+.labquip-speech-bubble {
+  background-image:
+    var(--artemis-scutes-svg),
+    radial-gradient(circle at 96% 6%, rgba(56, 189, 248, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 10% 0%, var(--cb, rgba(56, 189, 248, 0.12)) 0%, transparent 58%),
+    linear-gradient(135deg, rgba(5, 10, 22, 0.96) 0%, rgba(11, 18, 37, 0.93) 58%, rgba(22, 14, 42, 0.91) 100%) !important;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat !important;
+  background-position: right 0px top 0px, right top, left top, center !important;
+  background-size: 245px auto, 100% 100%, 100% 100%, 100% 100% !important;
+  border: 1px solid rgba(56, 189, 248, 0.26) !important;
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
+    0 16px 38px rgba(2, 6, 16, 0.72) !important;
+}
+
+.summary-card {
+  background-size: 210px auto, 100% 100%, 100% 100%, 100% 100% !important;
+}
+
+.labquip-speech-bubble {
+  background-size: 155px auto, 100% 100%, 100% 100%, 100% 100% !important;
+}
+
+/* 3. SUB-CAJAS INTERNAS LIMPIAS (SIN REPETIR EL SELLO DE PLACAS NI TAPAR DATOS) */
+.cortisol-result,
+.radiation-banner,
+.mental-zone,
+.warnings {
+  background-image:
+    radial-gradient(circle at 0% 0%, var(--cb, rgba(251, 191, 36, 0.14)) 0%, transparent 55%),
+    linear-gradient(180deg, rgba(6, 11, 22, 0.92) 0%, rgba(4, 8, 16, 0.95) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-top: 3px solid var(--c, var(--warn)) !important;
+}
+
+.kpi,
+.cortisol-card,
+.task-card {
+  background-image:
+    linear-gradient(160deg, rgba(8, 15, 28, 0.92) 0%, rgba(4, 8, 16, 0.96) 100%) !important;
+  border: 1px solid rgba(56, 189, 248, 0.18) !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Badges nítidos y legibles */
+.badge {
+  position: relative;
+  z-index: 2;
+  font-family: var(--font-mono) !important;
+  font-size: 11px !important;
+  letter-spacing: 0.05em !important;
+  background: rgba(5, 10, 20, 0.95) !important;
+  border: 1px solid var(--c, var(--accent)) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.65) !important;
+}
+
+.summary-card::before,
+.kpi::before,
+.cortisol-card::before,
+.task-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px !important;
+  background: linear-gradient(90deg, var(--c, var(--accent)) 0%, var(--c, var(--accent)) 68%, transparent 100%) !important;
+  box-shadow: 0 0 16px var(--c, var(--accent)) !important;
+  opacity: 1 !important;
+  z-index: 2;
+}
+
+/* --- CRÉDITO FOTOGRAFÍA ISS (BLANCO DISCRETO CON HIPERVÍNCULO) --- */
+.labquip-photo-credit {
+  display: flex;
+  justify-content: flex-end;
+  margin: -10px 0 12px;
+}
+
+.labquip-photo-credit a {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.78);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+
+.labquip-photo-credit a:hover {
+  color: #ffffff;
+  text-decoration: underline;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
