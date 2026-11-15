@@ -504,44 +504,6 @@ export function OverviewView({ astronaut, lang, onOpen }: Props) {
         </div>
       </div>
 
-      {astronaut ? (
-        <div className="downloads">
-        <span>{t("downloads.label")}</span>
-        <a
-          href={`/api/v1/astronauts/${encodeURIComponent(astronaut)}/export/summary.html?lang=${lang}`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          <i className="fa-solid fa-file-lines" aria-hidden="true" />
-          {t("downloads.summary_html")}
-        </a>
-        <a
-          href={`/api/v1/astronauts/${encodeURIComponent(astronaut)}/export/summary.pdf?lang=${lang}`}
-        >
-          <i className="fa-solid fa-file-pdf" aria-hidden="true" />
-          {t("downloads.summary_pdf")}
-        </a>
-        <a
-          href={`/api/v1/astronauts/${encodeURIComponent(astronaut)}/export/summary.json?lang=${lang}`}
-        >
-          <i className="fa-solid fa-file-code" aria-hidden="true" />
-          {t("downloads.summary_json")}
-        </a>
-        <a
-          href={`/api/v1/astronauts/${encodeURIComponent(astronaut)}/export/data.csv?lang=${lang}`}
-        >
-          <i className="fa-solid fa-file-csv" aria-hidden="true" />
-          {t("downloads.data_csv")}
-        </a>
-        <a
-          href={`/api/v1/astronauts/${encodeURIComponent(astronaut)}/export/data.json?lang=${lang}`}
-        >
-          <i className="fa-solid fa-database" aria-hidden="true" />
-          {t("downloads.data_json")}
-        </a>
-        </div>
-      ) : null}
-
       {!astronaut ? (
         <section className="panel">
           <div className="empty">{t("common.loading")}</div>

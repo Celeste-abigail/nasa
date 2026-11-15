@@ -79,7 +79,7 @@ del último dato y un sparkline. Cada tarjeta abre su módulo al hacer clic.
 - **Tripulación**: botón en el header para añadir astronautas (código, nombre, sexo, nacimiento) y
   archivarlos. El archivado es reversible: conserva todas las series y se restauran desde la
   pestaña “Archivados”. Siempre debe quedar al menos un astronauta activo.
-- **Descargas por astronauta** (desde el Resumen):
+- **Descargas por astronauta** (botón **DESCARGAR** en el header, con menú desplegable):
   - `summary.html` (imprimible), `summary.pdf` (reportlab) y `summary.json`;
   - `data.json` (completo) y `data.csv` (un único CSV en formato largo
     `module,recorded_at,metric,value,unit,flags,notes`).

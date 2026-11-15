@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 
 import type { Astronaut } from "../../lib/types";
+import { DownloadMenu } from "./DownloadMenu";
 
 type View = "overview" | "bone" | "cortisol" | "radiation" | "mental";
 
@@ -100,6 +101,8 @@ export function Header({
             <i className="fa-solid fa-users" aria-hidden="true" />
             <span>{t("crew.manage")}</span>
           </button>
+
+          <DownloadMenu astronaut={astronaut} lang={lang} />
 
           <div
             className="compact-lang"

@@ -231,7 +231,8 @@ Si un shell no reconoce `bun`, abre una terminal nueva o usa `export PATH="$PATH
   astronautas archivados se listan en `GET /astronauts/archived` y se recuperan con
   `POST /astronauts/{code}/restore`. No se puede archivar el último activo.
 - **Descargas** en `/api/v1/astronauts/{code}/export/`: `summary.html`, `summary.pdf`
-  (reportlab), `summary.json`, `data.json` y `data.csv` (formato largo).
+  (reportlab), `summary.json`, `data.json` y `data.csv` (formato largo). La UI las agrupa en el
+  botón “DESCARGAR” del header (resumen y datos).
 - **Fechas**: `components/TemporalField.tsx` unifica los inputs (`date`/`datetime`, botón “Ahora”).
   Radiación sigue en UTC.
 - **DMO**: la interfaz fija `calcaneus`; el formulario solo pide BUA y SOS. ATT se sigue aceptando
